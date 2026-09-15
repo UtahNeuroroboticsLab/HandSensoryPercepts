@@ -1,10 +1,26 @@
-<!-- hand_painter_demo.html -->
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Configure an electrode-pair study and map perceived stimulation intensity on a vector hand.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Hand percept mapper">
+  <meta property="og:description" content="Configure directed stimulation pairs, record hand percepts, and export vector study data.">
+  <meta property="og:image" content="assets/leonardomferrisi_stamp.svg">
+  <meta property="og:image:type" content="image/svg+xml">
+  <meta property="og:image:width" content="693">
+  <meta property="og:image:height" content="694">
+  <meta property="og:image:alt" content="Leonardo M. Ferrisi stamp">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Hand percept mapper">
+  <meta name="twitter:description" content="Configure directed stimulation pairs, record hand percepts, and export vector study data.">
+  <meta name="twitter:image" content="assets/leonardomferrisi_stamp.svg">
+  <meta name="twitter:image:alt" content="Leonardo M. Ferrisi stamp">
+  <link rel="icon" type="image/svg+xml" href="assets/leonardomferrisi_stamp.svg">
+  <link rel="icon" type="image/x-icon" sizes="32x32" href="assets/leonardomferrisi_stamp.ico">
+  <link rel="shortcut icon" href="assets/leonardomferrisi_stamp.ico">
   <title>Hand percept mapper</title>
   <style>
     :root {
@@ -15,13 +31,20 @@
       --gray-08: #f3f3f3;
       --bg: var(--white);
       --fg: var(--ink);
-      --fg-secondary: var(--gray-60);
+      --fg-secondary: var(--ink);
       --border: var(--gray-30);
       --border-strong: var(--ink);
       --surface: var(--gray-08);
       --font-content: Cambria, Georgia, "Times New Roman", serif;
       --font-ui: Arial, Helvetica, sans-serif;
       --font-mono: "SFMono-Regular", Consolas, monospace;
+      --text-display: 34px;
+      --text-h1: 26px;
+      --text-h2: 21px;
+      --text-body: 15px;
+      --text-ui: 14px;
+      --text-label: 12px;
+      --text-code: 12.5px;
       --space-1: 4px;
       --space-2: 8px;
       --space-3: 12px;
@@ -45,6 +68,7 @@
       background: var(--bg);
       color: var(--fg);
       font-family: var(--font-ui);
+      font-size: var(--text-body);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
@@ -77,12 +101,16 @@
 
     .app-shell {
       display: grid;
-      grid-template-columns: 348px minmax(0, 1fr);
-      min-height: 100vh;
+      grid-template-columns: 380px minmax(0, 1fr);
+      height: 100vh;
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
     }
 
     .sidebar {
       height: 100vh;
+      height: 100dvh;
       overflow-y: auto;
       border-right: 1px solid var(--border-strong);
       background: var(--white);
@@ -101,9 +129,9 @@
       display: block;
       margin: 0 0 var(--space-2);
       color: var(--fg-secondary);
-      font-size: 11px;
+      font-size: var(--text-label);
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.02em;
       line-height: 1.2;
       text-transform: uppercase;
     }
@@ -111,14 +139,14 @@
     .brand h1 {
       margin: 0;
       font-family: var(--font-content);
-      font-size: 28px;
+      font-size: 30px;
       line-height: 1.05;
     }
 
     .brand p {
       margin: var(--space-3) 0 0;
       color: var(--fg-secondary);
-      font-size: 12px;
+      font-size: var(--text-body);
     }
 
     .sidebar-section {
@@ -137,14 +165,14 @@
     .section-heading h2 {
       margin: 0;
       font-family: var(--font-content);
-      font-size: 19px;
+      font-size: var(--text-h2);
       line-height: 1.15;
     }
 
     .section-heading span {
       color: var(--fg-secondary);
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: var(--text-code);
     }
 
     .field {
@@ -168,7 +196,7 @@
     .field-help {
       margin: var(--space-2) 0 0;
       color: var(--fg-secondary);
-      font-size: 11px;
+      font-size: 13px;
       line-height: 1.35;
     }
 
@@ -191,7 +219,7 @@
       padding: 8px 10px;
       background: var(--white);
       cursor: pointer;
-      font-size: 13px;
+      font-size: var(--text-ui);
       text-align: center;
     }
 
@@ -247,7 +275,7 @@
       background: var(--white);
       cursor: pointer;
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: var(--text-code);
     }
 
     .channel-toggle input:checked + label {
@@ -266,13 +294,17 @@
       gap: var(--space-3);
     }
 
+    .reference-field {
+      grid-column: 1 / -1;
+    }
+
     .button {
       min-height: 40px;
       padding: 8px 14px;
       border: 1px solid var(--border-strong);
       background: var(--white);
       cursor: pointer;
-      font-size: 13px;
+      font-size: var(--text-ui);
       font-weight: 700;
     }
 
@@ -306,7 +338,7 @@
 
     .study-summary {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       margin: var(--space-4) 0;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
@@ -324,13 +356,13 @@
     .summary-stat strong {
       display: block;
       font-family: var(--font-content);
-      font-size: 22px;
+      font-size: var(--text-h1);
       line-height: 1;
     }
 
     .summary-stat span {
       color: var(--fg-secondary);
-      font-size: 11px;
+      font-size: 13px;
     }
 
     .intensity-panel {
@@ -391,14 +423,14 @@
     .intensity-label {
       position: absolute;
       left: 0;
-      font-size: 12px;
+      font-size: var(--text-ui);
       line-height: 1.2;
     }
 
     .intensity-label strong {
       display: block;
       font-family: var(--font-content);
-      font-size: 17px;
+      font-size: var(--text-h2);
     }
 
     .intensity-label-top {
@@ -423,7 +455,7 @@
       padding-top: var(--space-3);
       border-top: 1px solid var(--border);
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: var(--text-code);
     }
 
     .color-chip {
@@ -474,7 +506,7 @@
     .sequence-number,
     .sequence-pair {
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: var(--text-code);
     }
 
     .sequence-state {
@@ -488,17 +520,24 @@
       background: var(--ink);
     }
 
+    .sequence-item.reference {
+      border-top: 1px solid var(--border-strong);
+      font-weight: 700;
+    }
+
     .sidebar-footer {
       padding: var(--space-4) var(--space-6) var(--space-6);
       color: var(--fg-secondary);
-      font-size: 11px;
+      font-size: var(--text-code);
     }
 
     .workspace {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
       min-width: 0;
-      min-height: 100vh;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
       background: var(--surface);
     }
 
@@ -520,7 +559,7 @@
       margin: 0;
       overflow: hidden;
       font-family: var(--font-content);
-      font-size: 22px;
+      font-size: var(--text-h1);
       line-height: 1.15;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -530,7 +569,7 @@
       margin: 2px 0 0;
       color: var(--fg-secondary);
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: var(--text-code);
     }
 
     .polarity-group {
@@ -538,6 +577,10 @@
       align-items: center;
       justify-content: flex-end;
       gap: var(--space-2);
+    }
+
+    .polarity-group[hidden] {
+      display: none;
     }
 
     .polarity-badge {
@@ -548,7 +591,7 @@
       padding: 5px 8px;
       border: 1px solid var(--border-strong);
       background: var(--white);
-      font-size: 11px;
+      font-size: 13px;
     }
 
     .polarity-badge strong {
@@ -570,6 +613,7 @@
       display: flex;
       width: min(100%, 740px);
       height: 100%;
+      min-height: 0;
       max-height: 790px;
       align-items: center;
       justify-content: center;
@@ -581,6 +625,7 @@
       display: block;
       width: 100%;
       height: 100%;
+      min-height: 0;
       max-height: 760px;
       cursor: crosshair;
     }
@@ -641,7 +686,7 @@
     .completion-content h2 {
       margin: 0;
       font-family: var(--font-content);
-      font-size: 30px;
+      font-size: var(--text-display);
     }
 
     .completion-content p {
@@ -668,6 +713,8 @@
     .footer-left,
     .footer-right {
       display: flex;
+      min-width: 0;
+      flex-wrap: wrap;
       gap: var(--space-2);
     }
 
@@ -677,7 +724,7 @@
 
     .autosave-status {
       color: var(--fg-secondary);
-      font-size: 11px;
+      font-size: var(--text-code);
       text-align: center;
     }
 
@@ -695,13 +742,35 @@
       border: 1px solid var(--border-strong);
       background: var(--ink);
       color: var(--white);
-      font-size: 12px;
+      font-size: var(--text-ui);
       opacity: 0;
       pointer-events: none;
     }
 
     .toast.show {
       opacity: 1;
+    }
+
+    @media (min-width: 901px) and (max-width: 1200px) {
+      .workspace-header {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .polarity-group {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .workspace-footer {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: var(--space-3);
+      }
+
+      .autosave-status {
+        grid-column: 1 / -1;
+        grid-row: 1;
+      }
     }
 
     @media (max-width: 900px) {
@@ -711,6 +780,10 @@
 
       .app-shell {
         grid-template-columns: 1fr;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: visible;
       }
 
       .sidebar {
@@ -720,7 +793,9 @@
       }
 
       .workspace {
+        height: auto;
         min-height: 760px;
+        overflow: visible;
       }
 
       .workspace-header {
@@ -790,7 +865,7 @@
       <section class="sidebar-section" aria-labelledby="config-heading">
         <div class="section-heading">
           <h2 id="config-heading">Study config</h2>
-          <span>choose 2</span>
+          <span>directed pairs</span>
         </div>
 
         <div class="field">
@@ -833,21 +908,27 @@
 
         <div class="config-grid">
           <div class="field">
-            <label class="field-label" for="first-role">First channel</label>
+            <label class="field-label" for="first-role">First channel role</label>
             <select class="select-input" id="first-role">
               <option value="anode">Anode</option>
               <option value="cathode">Cathode</option>
             </select>
           </div>
           <div class="field">
-            <label class="field-label" for="study-limit">Hands in study</label>
-            <input class="number-input" id="study-limit" type="number" min="1" max="36" value="36">
+            <label class="field-label" for="study-limit">Stim pairs in study</label>
+            <input class="number-input" id="study-limit" type="number" min="1" max="72" value="72">
+          </div>
+          <div class="field reference-field">
+            <label class="field-label" for="reference-interval">Reference every N pairs</label>
+            <input class="number-input" id="reference-interval" type="number" min="0" step="1" value="10" aria-describedby="reference-help">
+            <p class="field-help" id="reference-help">Use 0 to disable reference hands.</p>
           </div>
         </div>
 
         <div class="study-summary" aria-live="polite">
           <div class="summary-stat"><strong id="selected-count">9</strong><span>electrodes</span></div>
-          <div class="summary-stat"><strong id="pair-count">36</strong><span>possible pairs</span></div>
+          <div class="summary-stat"><strong id="pair-count">72</strong><span>directed pairs</span></div>
+          <div class="summary-stat"><strong id="study-item-count">79</strong><span>total hands</span></div>
         </div>
 
         <button class="button button-primary button-full" id="generate-study" type="button">Generate study sequence</button>
@@ -887,9 +968,9 @@
       <section class="sidebar-section" aria-labelledby="sequence-heading">
         <div class="section-heading">
           <h2 id="sequence-heading">Study sequence</h2>
-          <span id="sequence-progress">0 / 36</span>
+          <span id="sequence-progress">0 / 79</span>
         </div>
-        <div class="sequence-list" id="sequence-list" aria-label="Electrode combinations"></div>
+        <div class="sequence-list" id="sequence-list" aria-label="Study items"></div>
       </section>
 
       <footer class="sidebar-footer">
@@ -901,10 +982,10 @@
       <header class="workspace-header">
         <button class="button" id="previous-button" type="button">&lt;-- Previous</button>
         <div class="pair-heading">
-          <h2 id="pair-title">Ch00 / Ch01</h2>
-          <p id="pair-position">Hand 01 of 36</p>
+          <h2 id="pair-title">Ch00 --&gt; Ch01</h2>
+          <p id="pair-position">Hand 01 of 79</p>
         </div>
-        <div class="polarity-group">
+        <div class="polarity-group" id="polarity-group">
           <span class="polarity-badge">Anode <strong id="anode-channel">Ch00</strong></span>
           <span class="polarity-badge">Cathode <strong id="cathode-channel">Ch01</strong></span>
           <button class="button" id="swap-polarity" type="button">Swap polarity</button>
@@ -1023,15 +1104,18 @@
     // --- Study constants ---
     const CHANNEL_ORDER = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09"];
     const DEFAULT_CHANNELS = ["00", "01", "03", "04", "05", "06", "07", "08", "09"];
-    const STORAGE_KEY = "hand-percept-mapper-study-v3";
+    const STORAGE_KEY = "hand-percept-mapper-study-v5";
+    const DEFAULT_REFERENCE_INTERVAL = 10;
     const MAX_UNDO = 30;
 
     const elements = {
       participantId: document.getElementById("participant-id"),
       firstRole: document.getElementById("first-role"),
       studyLimit: document.getElementById("study-limit"),
+      referenceInterval: document.getElementById("reference-interval"),
       selectedCount: document.getElementById("selected-count"),
       pairCount: document.getElementById("pair-count"),
+      studyItemCount: document.getElementById("study-item-count"),
       generateStudy: document.getElementById("generate-study"),
       intensityRail: document.getElementById("intensity-rail"),
       intensityThumb: document.getElementById("intensity-thumb"),
@@ -1046,6 +1130,7 @@
       pairPosition: document.getElementById("pair-position"),
       anodeChannel: document.getElementById("anode-channel"),
       cathodeChannel: document.getElementById("cathode-channel"),
+      polarityGroup: document.getElementById("polarity-group"),
       handSvg: document.getElementById("hand-svg"),
       handSvgTitle: document.getElementById("hand-svg-title"),
       handTransform: document.getElementById("hand-transform"),
@@ -1502,16 +1587,20 @@
     }
 
     /**
-     * Generates unique channel pairs in the supplied channel order.
+     * Generates directed channel pairs in the supplied channel order.
      *
      * @param {string[]} channels selected stim band channels
-     * @returns {{first: string, second: string}[]} unique choose-2 pairs
+     * @returns {{first: string, second: string}[]} directed pairs
      */
     function generateCombinations(channels) {
       const combinations = [];
       for (let firstIndex = 0; firstIndex < channels.length; firstIndex += 1) {
-        for (let secondIndex = firstIndex + 1; secondIndex < channels.length; secondIndex += 1) {
+        for (let secondIndex = 0; secondIndex < channels.length; secondIndex += 1) {
+          if (firstIndex === secondIndex) {
+            continue;
+          }
           combinations.push({
+            kind: "pair",
             first: channels[firstIndex],
             second: channels[secondIndex]
           });
@@ -1521,20 +1610,57 @@
     }
 
     /**
+     * Inserts a numbered reference hand after each complete pair interval.
+     *
+     * @param {{kind: string, first: string, second: string}[]} pairs directed pairs
+     * @param {number} interval number of stimulus pairs between references
+     * @returns {object[]} ordered study items
+     */
+    function buildStudySequence(pairs, interval) {
+      const sequence = [];
+      let referenceNumber = 0;
+      pairs.forEach((pair, index) => {
+        sequence.push(pair);
+        const completedPairCount = index + 1;
+        if (interval > 0 && completedPairCount % interval === 0) {
+          referenceNumber += 1;
+          sequence.push({
+            kind: "reference",
+            referenceNumber
+          });
+        }
+      });
+      return sequence;
+    }
+
+    /** Returns whether a study item is a reference hand. */
+    function isReferenceItem(item) {
+      return item.kind === "reference";
+    }
+
+    /** Returns the stable display title for a reference hand. */
+    function referenceTitle(item) {
+      return `REF_${String(item.referenceNumber).padStart(2, "0")}`;
+    }
+
+    /**
      * Builds the initial study state with the requested nine-channel setup.
      *
      * @returns {object} serializable application state
      */
     function createDefaultState() {
-      const combinations = generateCombinations(DEFAULT_CHANNELS);
+      const pairs = generateCombinations(DEFAULT_CHANNELS);
+      const combinations = buildStudySequence(pairs, DEFAULT_REFERENCE_INTERVAL);
       return {
-        version: 3,
+        version: 5,
         config: {
           participantId: "",
           handSide: "right",
           firstRole: "anode",
+          pairingMode: "directed",
+          referenceInterval: DEFAULT_REFERENCE_INTERVAL,
           selectedChannels: [...DEFAULT_CHANNELS],
-          limit: combinations.length
+          limit: pairs.length
         },
         combinations,
         drawings: {},
@@ -1552,7 +1678,7 @@
     function loadState() {
       try {
         const cached = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (cached && cached.version === 3 && Array.isArray(cached.combinations) && cached.combinations.length > 0) {
+        if (cached && cached.version === 5 && Array.isArray(cached.combinations) && cached.combinations.length > 0) {
           return cached;
         }
       } catch (error) {
@@ -1574,19 +1700,22 @@
     }
 
     /**
-     * Returns the stable key for one electrode pair.
+     * Returns the stable key for one study item.
      *
-     * @param {{first: string, second: string}} combination electrode pair
-     * @returns {string} pair key
+     * @param {object} combination study item
+     * @returns {string} study item key
      */
     function combinationKey(combination) {
+      if (isReferenceItem(combination)) {
+        return `reference-${String(combination.referenceNumber).padStart(2, "0")}`;
+      }
       return `${combination.first}-${combination.second}`;
     }
 
     /**
      * Gets or creates the drawing record for a combination.
      *
-     * @param {{first: string, second: string}} combination electrode pair
+     * @param {object} combination study item
      * @returns {object} cached drawing record
      */
     function getDrawing(combination) {
@@ -1773,6 +1902,9 @@
     /** Swaps anode and cathode for only the current hand. */
     function swapCurrentPolarity() {
       const combination = state.combinations[state.currentIndex];
+      if (isReferenceItem(combination)) {
+        return;
+      }
       const drawing = getDrawing(combination);
       drawing.polaritySwapped = !drawing.polaritySwapped;
       drawing.savedAt = new Date().toISOString();
@@ -1793,22 +1925,33 @@
       } else {
         elements.handTransform.removeAttribute("transform");
       }
-      elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} hand percept map for Ch${combination.first} and Ch${combination.second}`;
+      if (isReferenceItem(combination)) {
+        elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} reference hand percept map ${referenceTitle(combination)}`;
+      } else {
+        elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} hand percept map for Ch${combination.first} and Ch${combination.second}`;
+      }
     }
 
     /** Renders the active combination, polarity, navigation, and progress. */
     function renderWorkspace() {
       const combination = state.combinations[state.currentIndex];
       const drawing = getDrawing(combination);
-      const polarity = resolvePolarity(combination, drawing);
       const total = state.combinations.length;
-      const position = String(state.currentIndex + 1).padStart(2, "0");
+      const positionDigits = Math.max(2, String(total).length);
+      const position = String(state.currentIndex + 1).padStart(positionDigits, "0");
       const completedCount = state.combinations.filter((item) => getDrawing(item).completed).length;
 
-      elements.pairTitle.textContent = `Ch${combination.first} / Ch${combination.second}`;
+      if (isReferenceItem(combination)) {
+        elements.pairTitle.textContent = referenceTitle(combination);
+        elements.polarityGroup.hidden = true;
+      } else {
+        const polarity = resolvePolarity(combination, drawing);
+        elements.pairTitle.textContent = `Ch${combination.first} --> Ch${combination.second}`;
+        elements.anodeChannel.textContent = `Ch${polarity.anode}`;
+        elements.cathodeChannel.textContent = `Ch${polarity.cathode}`;
+        elements.polarityGroup.hidden = false;
+      }
       elements.pairPosition.textContent = `Hand ${position} of ${total}`;
-      elements.anodeChannel.textContent = `Ch${polarity.anode}`;
-      elements.cathodeChannel.textContent = `Ch${polarity.cathode}`;
       elements.previousButton.disabled = state.currentIndex === 0;
       elements.nextButton.textContent = state.currentIndex === total - 1 ? "Save SVG + finish" : "Save SVG + next -->";
       elements.sequenceProgress.textContent = `${completedCount} / ${total}`;
@@ -1824,6 +1967,7 @@
     /** Renders a selectable index of every generated pair. */
     function renderSequence() {
       elements.sequenceList.replaceChildren();
+      const orderDigits = Math.max(2, String(state.combinations.length).length);
       state.combinations.forEach((combination, index) => {
         const drawing = getDrawing(combination);
         const button = document.createElement("button");
@@ -1836,7 +1980,14 @@
         if (drawing.completed) {
           button.classList.add("done");
         }
-        button.innerHTML = `<span class="sequence-number">${String(index + 1).padStart(2, "0")}</span><span class="sequence-pair">Ch${combination.first} / Ch${combination.second}</span><span class="sequence-state" aria-label="${drawing.completed ? "Complete" : "Not complete"}"></span>`;
+        let itemTitle;
+        if (isReferenceItem(combination)) {
+          itemTitle = referenceTitle(combination);
+          button.classList.add("reference");
+        } else {
+          itemTitle = `Ch${combination.first} --> Ch${combination.second}`;
+        }
+        button.innerHTML = `<span class="sequence-number">${String(index + 1).padStart(orderDigits, "0")}</span><span class="sequence-pair">${itemTitle}</span><span class="sequence-state" aria-label="${drawing.completed ? "Complete" : "Not complete"}"></span>`;
         button.addEventListener("click", () => navigateTo(index));
         elements.sequenceList.appendChild(button);
       });
@@ -1851,6 +2002,7 @@
       elements.participantId.value = state.config.participantId || "";
       elements.firstRole.value = state.config.firstRole;
       elements.studyLimit.value = state.config.limit;
+      elements.referenceInterval.value = state.config.referenceInterval;
       document.querySelector(`input[name="hand-side"][value="${state.config.handSide}"]`).checked = true;
       CHANNEL_ORDER.forEach((channel) => {
         document.getElementById(`channel-${channel}`).checked = state.config.selectedChannels.includes(channel);
@@ -1861,14 +2013,33 @@
     /** Updates the pending electrode and pair counts. */
     function updatePairEstimate() {
       const channels = readSelectedChannels();
-      const count = (channels.length * (channels.length - 1)) / 2;
+      const count = channels.length * (channels.length - 1);
+      const previousMaximum = Number(elements.studyLimit.max);
+      const currentLimit = Number(elements.studyLimit.value);
+      const limitWasPreviousMaximum = currentLimit === previousMaximum;
       elements.selectedCount.textContent = channels.length;
       elements.pairCount.textContent = count;
       elements.studyLimit.max = Math.max(1, count);
-      if (Number(elements.studyLimit.value) > count || Number(elements.studyLimit.value) < 1) {
+      if (limitWasPreviousMaximum || !Number.isFinite(currentLimit) || currentLimit > count || currentLimit < 1) {
         elements.studyLimit.value = Math.max(1, count);
       }
+      const selectedPairCount = Math.min(count, Math.max(0, Number(elements.studyLimit.value)));
+      const referenceInterval = readReferenceInterval();
+      let referenceCount = 0;
+      if (referenceInterval > 0) {
+        referenceCount = Math.floor(selectedPairCount / referenceInterval);
+      }
+      elements.studyItemCount.textContent = selectedPairCount + referenceCount;
       elements.generateStudy.disabled = count < 1;
+    }
+
+    /** Returns the normalized reference interval, where zero disables references. */
+    function readReferenceInterval() {
+      const interval = Math.floor(Number(elements.referenceInterval.value));
+      if (!Number.isFinite(interval) || interval < 1) {
+        return 0;
+      }
+      return interval;
     }
 
     /**
@@ -1895,17 +2066,22 @@
       }
 
       const requestedLimit = Math.max(1, Math.min(possibleCombinations.length, Number(elements.studyLimit.value) || possibleCombinations.length));
+      const referenceInterval = readReferenceInterval();
+      const requestedPairs = possibleCombinations.slice(0, requestedLimit);
+      const studyItems = buildStudySequence(requestedPairs, referenceInterval);
       const handSide = document.querySelector('input[name="hand-side"]:checked').value;
       state = {
-        version: 2,
+        version: 5,
         config: {
           participantId: elements.participantId.value.trim(),
           handSide,
           firstRole: elements.firstRole.value,
+          pairingMode: "directed",
+          referenceInterval,
           selectedChannels: channels,
           limit: requestedLimit
         },
-        combinations: possibleCombinations.slice(0, requestedLimit),
+        combinations: studyItems,
         drawings: {},
         currentIndex: 0,
         complete: false,
@@ -1914,7 +2090,8 @@
       persistState();
       renderConfig();
       renderWorkspace();
-      showToast(`${requestedLimit} hand${requestedLimit === 1 ? "" : "s"} generated in choose-2 order.`);
+      const referenceCount = studyItems.length - requestedPairs.length;
+      showToast(`${requestedPairs.length} stimulus hands and ${referenceCount} reference hands generated.`);
     }
 
     /**
@@ -1975,13 +2152,12 @@
     /**
      * Creates a standalone true-vector SVG for one cached drawing.
      *
-     * @param {{first: string, second: string}} combination electrode pair
+     * @param {object} combination study item
      * @param {number} index combination index
      * @returns {string} serialized SVG document
      */
     function buildSvg(combination, index) {
       const drawing = getDrawing(combination);
-      const polarity = resolvePolarity(combination, drawing);
       const clone = elements.handSvg.cloneNode(true);
       clone.removeAttribute("id");
       clone.setAttribute("width", "811");
@@ -1997,22 +2173,31 @@
         region.removeAttribute("aria-label");
       });
       prepareLineArtForStandaloneSvg(clone);
-      const metadata = document.createElementNS("http://www.w3.org/2000/svg", "metadata");
-      metadata.textContent = JSON.stringify({
+      const studyMetadata = {
         application: "Hand percept mapper",
         creator: "Leonardo M. Ferrisi and contributors",
         participantId: state.config.participantId,
         handSide: state.config.handSide,
         order: index + 1,
         total: state.combinations.length,
-        firstChannel: `Ch${combination.first}`,
-        secondChannel: `Ch${combination.second}`,
-        anode: `Ch${polarity.anode}`,
-        cathode: `Ch${polarity.cathode}`,
         intensityScale: { least: 0, medium: 1, most: 2 },
         regions: drawing.fills,
         savedAt: drawing.savedAt
-      });
+      };
+      if (isReferenceItem(combination)) {
+        studyMetadata.studyItemType = "reference";
+        studyMetadata.referenceId = referenceTitle(combination);
+      } else {
+        const polarity = resolvePolarity(combination, drawing);
+        studyMetadata.studyItemType = "stimulus";
+        studyMetadata.orderedPair = `Ch${combination.first}-->Ch${combination.second}`;
+        studyMetadata.firstChannel = `Ch${combination.first}`;
+        studyMetadata.secondChannel = `Ch${combination.second}`;
+        studyMetadata.anode = `Ch${polarity.anode}`;
+        studyMetadata.cathode = `Ch${polarity.cathode}`;
+      }
+      const metadata = document.createElementNS("http://www.w3.org/2000/svg", "metadata");
+      metadata.textContent = JSON.stringify(studyMetadata);
       clone.insertBefore(metadata, clone.firstChild);
       return `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(clone)}`;
     }
@@ -2020,16 +2205,20 @@
     /**
      * Creates the data-oriented filename for one hand.
      *
-     * @param {{first: string, second: string}} combination electrode pair
+     * @param {object} combination study item
      * @param {number} index combination index
      * @returns {string} safe SVG filename
      */
     function svgFilename(combination, index) {
       const drawing = getDrawing(combination);
-      const polarity = resolvePolarity(combination, drawing);
       const participant = sanitizeFilename(state.config.participantId);
       const participantPrefix = participant ? `${participant}_` : "";
-      const order = String(index + 1).padStart(2, "0");
+      const orderDigits = Math.max(2, String(state.combinations.length).length);
+      const order = String(index + 1).padStart(orderDigits, "0");
+      if (isReferenceItem(combination)) {
+        return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_${referenceTitle(combination)}.svg`;
+      }
+      const polarity = resolvePolarity(combination, drawing);
       return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_anode-Ch${polarity.anode}_cathode-Ch${polarity.cathode}.svg`;
     }
 
@@ -2075,17 +2264,34 @@
     /** Builds and downloads every cached hand plus manifests as a ZIP. */
     function downloadStudyZip() {
       const files = [];
-      const manifestRows = [["order", "pair", "anode", "cathode", "hand_side", "completed", "saved_at", "filename"]];
+      const manifestRows = [["order", "item_type", "item_title", "pair", "anode", "cathode", "hand_side", "completed", "saved_at", "filename"]];
       state.combinations.forEach((combination, index) => {
         const drawing = getDrawing(combination);
-        const polarity = resolvePolarity(combination, drawing);
         const filename = svgFilename(combination, index);
+        let itemType;
+        let itemTitle;
+        let pair = "";
+        let anode = "";
+        let cathode = "";
+        if (isReferenceItem(combination)) {
+          itemType = "reference";
+          itemTitle = referenceTitle(combination);
+        } else {
+          const polarity = resolvePolarity(combination, drawing);
+          itemType = "stimulus";
+          itemTitle = `Ch${combination.first}-->Ch${combination.second}`;
+          pair = itemTitle;
+          anode = `Ch${polarity.anode}`;
+          cathode = `Ch${polarity.cathode}`;
+        }
         files.push({ name: filename, content: buildSvg(combination, index) });
         manifestRows.push([
           String(index + 1),
-          `Ch${combination.first}/Ch${combination.second}`,
-          `Ch${polarity.anode}`,
-          `Ch${polarity.cathode}`,
+          itemType,
+          itemTitle,
+          pair,
+          anode,
+          cathode,
           state.config.handSide,
           drawing.completed ? "true" : "false",
           drawing.savedAt || "",
@@ -2291,6 +2497,8 @@
     document.querySelectorAll('#channel-grid input[type="checkbox"]').forEach((input) => {
       input.addEventListener("change", updatePairEstimate);
     });
+    elements.studyLimit.addEventListener("input", updatePairEstimate);
+    elements.referenceInterval.addEventListener("input", updatePairEstimate);
     elements.generateStudy.addEventListener("click", applyStudyConfig);
     elements.fillTool.addEventListener("click", () => setTool("fill"));
     elements.eraseTool.addEventListener("click", () => setTool("erase"));
