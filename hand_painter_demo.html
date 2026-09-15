@@ -1010,6 +1010,7 @@
         <div class="autosave-status" id="autosave-status"><strong>Cached locally</strong><br>Current hand is ready</div>
         <div class="footer-right">
           <button class="button" id="download-all" type="button">Download cached ZIP</button>
+          <button class="button" id="save-current" type="button">Save current SVG</button>
           <button class="button button-primary" id="next-button" type="button">Save SVG + next --&gt;</button>
         </div>
       </footer>
@@ -1053,6 +1054,7 @@
       undoButton: document.getElementById("undo-button"),
       clearButton: document.getElementById("clear-button"),
       downloadAll: document.getElementById("download-all"),
+      saveCurrent: document.getElementById("save-current"),
       nextButton: document.getElementById("next-button"),
       autosaveStatus: document.getElementById("autosave-status"),
       completionPanel: document.getElementById("completion-panel"),
@@ -1468,6 +1470,7 @@
       elements.clearButton.disabled = isDisabled;
       elements.nextButton.disabled = isDisabled;
       elements.downloadAll.disabled = isDisabled;
+      elements.saveCurrent.disabled = isDisabled;
     }
 
     /**
@@ -1929,6 +1932,20 @@
       renderWorkspace();
     }
 
+    /** Saves and downloads the current hand without advancing the study. */
+    function saveCurrentHand() {
+      if (!handRegionsReady) {
+        showToast("The anatomical hand is still being prepared.");
+        return;
+      }
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      drawing.savedAt = new Date().toISOString();
+      persistState();
+      downloadText(buildSvg(combination, state.currentIndex), svgFilename(combination, state.currentIndex), "image/svg+xml");
+      showToast("Current hand cached and downloaded as SVG.");
+    }
+
     /** Saves and downloads the current SVG, then advances the study. */
     function saveAndAdvance() {
       if (!handRegionsReady) {
@@ -2281,6 +2298,7 @@
     elements.clearButton.addEventListener("click", clearCurrentHand);
     elements.previousButton.addEventListener("click", () => navigateTo(state.currentIndex - 1));
     elements.swapPolarity.addEventListener("click", swapCurrentPolarity);
+    elements.saveCurrent.addEventListener("click", saveCurrentHand);
     elements.nextButton.addEventListener("click", saveAndAdvance);
     elements.downloadAll.addEventListener("click", downloadStudyZip);
     elements.completionDownload.addEventListener("click", downloadStudyZip);
@@ -2338,8 +2356,7 @@
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        const combination = state.combinations[state.currentIndex];
-        downloadText(buildSvg(combination, state.currentIndex), svgFilename(combination, state.currentIndex), "image/svg+xml");
+        saveCurrentHand();
       }
     });
 
