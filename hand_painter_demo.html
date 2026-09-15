@@ -1,0 +1,2363 @@
+<!-- hand_painter_demo.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Configure an electrode-pair study and map perceived stimulation intensity on a vector hand.">
+  <title>Hand percept mapper</title>
+  <style>
+    :root {
+      --ink: #0a0a0a;
+      --white: #ffffff;
+      --gray-60: #5a5a5a;
+      --gray-30: #c7c7c7;
+      --gray-08: #f3f3f3;
+      --bg: var(--white);
+      --fg: var(--ink);
+      --fg-secondary: var(--gray-60);
+      --border: var(--gray-30);
+      --border-strong: var(--ink);
+      --surface: var(--gray-08);
+      --font-content: Cambria, Georgia, "Times New Roman", serif;
+      --font-ui: Arial, Helvetica, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, monospace;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --radius-input: 2px;
+      --intensity-color: #ff7926;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    button,
+    input,
+    select {
+      color: inherit;
+      font: inherit;
+    }
+
+    button,
+    select,
+    input {
+      border-radius: var(--radius-input);
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    .intensity-rail:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 348px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--border-strong);
+      background: var(--white);
+      scrollbar-width: thin;
+    }
+
+    .brand {
+      padding: var(--space-6) var(--space-6) var(--space-5);
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    .brand-kicker,
+    .section-kicker,
+    .field-label,
+    .tiny-label {
+      display: block;
+      margin: 0 0 var(--space-2);
+      color: var(--fg-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: var(--font-content);
+      font-size: 28px;
+      line-height: 1.05;
+    }
+
+    .brand p {
+      margin: var(--space-3) 0 0;
+      color: var(--fg-secondary);
+      font-size: 12px;
+    }
+
+    .sidebar-section {
+      padding: var(--space-5) var(--space-6);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-family: var(--font-content);
+      font-size: 19px;
+      line-height: 1.15;
+    }
+
+    .section-heading span {
+      color: var(--fg-secondary);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .field {
+      margin-bottom: var(--space-4);
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .text-input,
+    .number-input,
+    .select-input {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 10px;
+      border: 1px solid var(--border-strong);
+      background: var(--white);
+    }
+
+    .field-help {
+      margin: var(--space-2) 0 0;
+      color: var(--fg-secondary);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .segmented-control {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border-strong);
+    }
+
+    .segmented-control input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .segmented-control label {
+      min-height: 38px;
+      padding: 8px 10px;
+      background: var(--white);
+      cursor: pointer;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .segmented-control label + input + label {
+      border-left: 1px solid var(--border-strong);
+    }
+
+    .segmented-control input:checked + label {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .segmented-control input:focus-visible + label {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+
+    .band-map {
+      display: grid;
+      gap: 6px;
+      padding: var(--space-3);
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .band-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .band-row-three {
+      grid-template-columns: repeat(3, 1fr);
+      padding: 0 18px;
+    }
+
+    .band-row-four {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .channel-toggle input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    .channel-toggle label {
+      display: flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-strong);
+      background: var(--white);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .channel-toggle input:checked + label {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .channel-toggle input:focus-visible + label {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    .button {
+      min-height: 40px;
+      padding: 8px 14px;
+      border: 1px solid var(--border-strong);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .button:hover {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .button-primary {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .button-primary:hover {
+      opacity: 0.85;
+    }
+
+    .button:disabled {
+      cursor: default;
+      opacity: 0.42;
+    }
+
+    .button:disabled:hover {
+      background: inherit;
+      color: inherit;
+    }
+
+    .button-full {
+      width: 100%;
+    }
+
+    .study-summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin: var(--space-4) 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary-stat {
+      padding: var(--space-3) 0;
+    }
+
+    .summary-stat + .summary-stat {
+      padding-left: var(--space-3);
+      border-left: 1px solid var(--border);
+    }
+
+    .summary-stat strong {
+      display: block;
+      font-family: var(--font-content);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .summary-stat span {
+      color: var(--fg-secondary);
+      font-size: 11px;
+    }
+
+    .intensity-panel {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: var(--space-4);
+      align-items: stretch;
+    }
+
+    .intensity-rail-wrap {
+      position: relative;
+      width: 74px;
+      height: 230px;
+    }
+
+    .intensity-rail {
+      position: absolute;
+      inset: 0 17px;
+      border: 1px solid var(--border-strong);
+      background: linear-gradient(to bottom, #ffe600 0%, #ffc51b 27%, #ff7926 50%, #e93d1c 73%, #a70f0a 100%);
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .intensity-thumb {
+      position: absolute;
+      left: -9px;
+      width: 50px;
+      height: 2px;
+      background: var(--ink);
+      pointer-events: none;
+    }
+
+    .intensity-thumb::before,
+    .intensity-thumb::after {
+      position: absolute;
+      top: -4px;
+      width: 8px;
+      height: 10px;
+      background: var(--white);
+      border: 1px solid var(--ink);
+      content: "";
+    }
+
+    .intensity-thumb::before {
+      left: -1px;
+    }
+
+    .intensity-thumb::after {
+      right: -1px;
+    }
+
+    .intensity-copy {
+      position: relative;
+      min-height: 230px;
+    }
+
+    .intensity-label {
+      position: absolute;
+      left: 0;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .intensity-label strong {
+      display: block;
+      font-family: var(--font-content);
+      font-size: 17px;
+    }
+
+    .intensity-label-top {
+      top: 0;
+    }
+
+    .intensity-label-middle {
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .intensity-label-bottom {
+      bottom: 0;
+    }
+
+    .intensity-readout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .color-chip {
+      width: 22px;
+      height: 22px;
+      border: 1px solid var(--border-strong);
+      background: var(--intensity-color);
+    }
+
+    .tool-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+    }
+
+    .tool-button.active {
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .sequence-list {
+      display: grid;
+      max-height: 224px;
+      overflow-y: auto;
+      border-top: 1px solid var(--border-strong);
+    }
+
+    .sequence-item {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: var(--space-2);
+      align-items: center;
+      min-height: 42px;
+      padding: 7px 4px;
+      border: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--white);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .sequence-item:hover,
+    .sequence-item.current {
+      background: var(--surface);
+    }
+
+    .sequence-number,
+    .sequence-pair {
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .sequence-state {
+      width: 8px;
+      height: 8px;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+    }
+
+    .sequence-item.done .sequence-state {
+      background: var(--ink);
+    }
+
+    .sidebar-footer {
+      padding: var(--space-4) var(--space-6) var(--space-6);
+      color: var(--fg-secondary);
+      font-size: 11px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-width: 0;
+      min-height: 100vh;
+      background: var(--surface);
+    }
+
+    .workspace-header {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: var(--space-4);
+      align-items: center;
+      padding: var(--space-4) var(--space-6);
+      border-bottom: 1px solid var(--border-strong);
+      background: var(--white);
+    }
+
+    .pair-heading {
+      min-width: 0;
+    }
+
+    .pair-heading h2 {
+      margin: 0;
+      overflow: hidden;
+      font-family: var(--font-content);
+      font-size: 22px;
+      line-height: 1.15;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pair-heading p {
+      margin: 2px 0 0;
+      color: var(--fg-secondary);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .polarity-group {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-2);
+    }
+
+    .polarity-badge {
+      display: inline-flex;
+      min-height: 31px;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--white);
+      font-size: 11px;
+    }
+
+    .polarity-badge strong {
+      font-family: var(--font-mono);
+    }
+
+    .hand-stage {
+      position: relative;
+      display: flex;
+      min-height: 0;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: var(--space-6);
+    }
+
+    .hand-board {
+      position: relative;
+      display: flex;
+      width: min(100%, 740px);
+      height: 100%;
+      max-height: 790px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-strong);
+      background: var(--white);
+    }
+
+    #hand-svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-height: 760px;
+      cursor: crosshair;
+    }
+
+    .hand-region {
+      fill: var(--white);
+      cursor: crosshair;
+    }
+
+    .hand-region:hover {
+      filter: brightness(0.94);
+    }
+
+    .hand-outline,
+    .hand-detail {
+      fill: none;
+      stroke: #231f20;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .hand-outline {
+      stroke-width: 0.5;
+    }
+
+    .hand-detail {
+      stroke-width: 0.1;
+    }
+
+    .hand-miter {
+      stroke-linecap: butt;
+      stroke-linejoin: miter;
+      stroke-miterlimit: 10;
+    }
+
+    .completion-panel {
+      position: absolute;
+      inset: var(--space-8);
+      z-index: 2;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-strong);
+      background: var(--white);
+      text-align: center;
+    }
+
+    .completion-panel.show {
+      display: flex;
+    }
+
+    .completion-content {
+      width: min(480px, 100%);
+      padding: var(--space-8);
+    }
+
+    .completion-content h2 {
+      margin: 0;
+      font-family: var(--font-content);
+      font-size: 30px;
+    }
+
+    .completion-content p {
+      margin: var(--space-3) 0 var(--space-6);
+      color: var(--fg-secondary);
+    }
+
+    .completion-actions {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-2);
+    }
+
+    .workspace-footer {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: var(--space-4);
+      align-items: center;
+      padding: var(--space-4) var(--space-6);
+      border-top: 1px solid var(--border-strong);
+      background: var(--white);
+    }
+
+    .footer-left,
+    .footer-right {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .footer-right {
+      justify-content: flex-end;
+    }
+
+    .autosave-status {
+      color: var(--fg-secondary);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .autosave-status strong {
+      color: var(--fg);
+    }
+
+    .toast {
+      position: fixed;
+      right: var(--space-5);
+      bottom: var(--space-5);
+      z-index: 5;
+      max-width: 340px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-strong);
+      background: var(--ink);
+      color: var(--white);
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        overflow: auto;
+      }
+
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border-strong);
+      }
+
+      .workspace {
+        min-height: 760px;
+      }
+
+      .workspace-header {
+        grid-template-columns: auto 1fr;
+      }
+
+      .polarity-group {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .hand-stage {
+        min-height: 600px;
+      }
+
+      .workspace-footer {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .autosave-status {
+        grid-column: 1 / -1;
+        grid-row: 1;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .workspace-header,
+      .workspace-footer,
+      .hand-stage {
+        padding: var(--space-3);
+      }
+
+      .workspace-footer {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-left,
+      .footer-right {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .autosave-status {
+        grid-column: auto;
+      }
+
+      .completion-panel {
+        inset: var(--space-3);
+      }
+
+      .completion-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="sidebar" aria-label="Study controls">
+      <header class="brand">
+        <span class="brand-kicker">Neuroengineering research tool</span>
+        <h1>Hand percept mapper</h1>
+        <p>Configure stimulation pairs, record perceived regions, and export study-ready vector files.</p>
+      </header>
+
+      <section class="sidebar-section" aria-labelledby="config-heading">
+        <div class="section-heading">
+          <h2 id="config-heading">Study config</h2>
+          <span>choose 2</span>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="participant-id">Participant or session ID</label>
+          <input class="text-input" id="participant-id" type="text" autocomplete="off" placeholder="Optional">
+        </div>
+
+        <fieldset class="field" style="border: 0; padding: 0; margin-inline: 0;">
+          <legend class="field-label">Hand side</legend>
+          <div class="segmented-control">
+            <input id="side-right" name="hand-side" type="radio" value="right" checked>
+            <label for="side-right">Right hand</label>
+            <input id="side-left" name="hand-side" type="radio" value="left">
+            <label for="side-left">Left hand</label>
+          </div>
+        </fieldset>
+
+        <fieldset class="field" style="border: 0; padding: 0; margin-inline: 0;">
+          <legend class="field-label">Stim band electrodes</legend>
+          <div class="band-map" id="channel-grid" aria-describedby="channel-help">
+            <div class="band-row band-row-three">
+              <div class="channel-toggle"><input id="channel-00" type="checkbox" value="00" checked><label for="channel-00">Ch00</label></div>
+              <div class="channel-toggle"><input id="channel-01" type="checkbox" value="01" checked><label for="channel-01">Ch01</label></div>
+              <div class="channel-toggle"><input id="channel-02" type="checkbox" value="02"><label for="channel-02">Ch02</label></div>
+            </div>
+            <div class="band-row band-row-four">
+              <div class="channel-toggle"><input id="channel-03" type="checkbox" value="03" checked><label for="channel-03">Ch03</label></div>
+              <div class="channel-toggle"><input id="channel-04" type="checkbox" value="04" checked><label for="channel-04">Ch04</label></div>
+              <div class="channel-toggle"><input id="channel-05" type="checkbox" value="05" checked><label for="channel-05">Ch05</label></div>
+              <div class="channel-toggle"><input id="channel-06" type="checkbox" value="06" checked><label for="channel-06">Ch06</label></div>
+            </div>
+            <div class="band-row band-row-three">
+              <div class="channel-toggle"><input id="channel-07" type="checkbox" value="07" checked><label for="channel-07">Ch07</label></div>
+              <div class="channel-toggle"><input id="channel-08" type="checkbox" value="08" checked><label for="channel-08">Ch08</label></div>
+              <div class="channel-toggle"><input id="channel-09" type="checkbox" value="09" checked><label for="channel-09">Ch09</label></div>
+            </div>
+          </div>
+          <p class="field-help" id="channel-help">Layout matches the provided stim band reference. Ch02 is excluded by default.</p>
+        </fieldset>
+
+        <div class="config-grid">
+          <div class="field">
+            <label class="field-label" for="first-role">First channel</label>
+            <select class="select-input" id="first-role">
+              <option value="anode">Anode</option>
+              <option value="cathode">Cathode</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label" for="study-limit">Hands in study</label>
+            <input class="number-input" id="study-limit" type="number" min="1" max="36" value="36">
+          </div>
+        </div>
+
+        <div class="study-summary" aria-live="polite">
+          <div class="summary-stat"><strong id="selected-count">9</strong><span>electrodes</span></div>
+          <div class="summary-stat"><strong id="pair-count">36</strong><span>possible pairs</span></div>
+        </div>
+
+        <button class="button button-primary button-full" id="generate-study" type="button">Generate study sequence</button>
+      </section>
+
+      <section class="sidebar-section" aria-labelledby="intensity-heading">
+        <div class="section-heading">
+          <h2 id="intensity-heading">Percept intensity</h2>
+          <span id="intensity-value-heading">1.0</span>
+        </div>
+
+        <div class="intensity-panel">
+          <div class="intensity-rail-wrap">
+            <div class="intensity-rail" id="intensity-rail" role="slider" tabindex="0" aria-label="Percept intensity" aria-valuemin="0" aria-valuemax="2" aria-valuenow="1" aria-valuetext="Medium intensity">
+              <div class="intensity-thumb" id="intensity-thumb"></div>
+            </div>
+          </div>
+          <div class="intensity-copy" aria-hidden="true">
+            <div class="intensity-label intensity-label-top"><strong>Least intense</strong>Bright yellow</div>
+            <div class="intensity-label intensity-label-middle"><strong>1</strong>Medium intensity</div>
+            <div class="intensity-label intensity-label-bottom"><strong>Most intense</strong>Deep red</div>
+          </div>
+        </div>
+
+        <div class="intensity-readout">
+          <span id="intensity-readout">Intensity 1.0</span>
+          <span class="color-chip" id="color-chip" aria-hidden="true"></span>
+        </div>
+
+        <div class="tool-row" aria-label="Painting tools">
+          <button class="button tool-button active" id="fill-tool" type="button">Fill region</button>
+          <button class="button tool-button" id="erase-tool" type="button">Erase region</button>
+        </div>
+        <p class="field-help">Select an intensity, then click an anatomical region. Keyboard: F fill, E erase, Ctrl+Z undo.</p>
+      </section>
+
+      <section class="sidebar-section" aria-labelledby="sequence-heading">
+        <div class="section-heading">
+          <h2 id="sequence-heading">Study sequence</h2>
+          <span id="sequence-progress">0 / 36</span>
+        </div>
+        <div class="sequence-list" id="sequence-list" aria-label="Electrode combinations"></div>
+      </section>
+
+      <footer class="sidebar-footer">
+        Created for neuroengineering research by Leonardo M. Ferrisi and contributors. Drawings remain in this browser until the study is regenerated or browser data is cleared.
+      </footer>
+    </aside>
+
+    <section class="workspace" aria-label="Hand painting workspace">
+      <header class="workspace-header">
+        <button class="button" id="previous-button" type="button">&lt;-- Previous</button>
+        <div class="pair-heading">
+          <h2 id="pair-title">Ch00 / Ch01</h2>
+          <p id="pair-position">Hand 01 of 36</p>
+        </div>
+        <div class="polarity-group">
+          <span class="polarity-badge">Anode <strong id="anode-channel">Ch00</strong></span>
+          <span class="polarity-badge">Cathode <strong id="cathode-channel">Ch01</strong></span>
+          <button class="button" id="swap-polarity" type="button">Swap polarity</button>
+        </div>
+      </header>
+
+      <div class="hand-stage">
+        <div class="hand-board">
+          <svg id="hand-svg" viewBox="0 0 81.09 128.32" role="img" aria-labelledby="hand-svg-title hand-svg-description" xmlns="http://www.w3.org/2000/svg">
+            <title id="hand-svg-title">Right hand percept map</title>
+            <desc id="hand-svg-description">The supplied anatomical vector hand with selectable percept regions.</desc>
+
+            <g id="hand-transform">
+              <g id="region-layer">
+                <!-- Regions are generated from the supplied anatomical line art at startup. -->
+              </g>
+
+              <g aria-hidden="true">
+                <path class="hand-outline" d="M50.8,39.02c-.81-1.01-1.38-2.2-1.45-3.44-.14-2.14-.28-4.28-.33-6.41-.04-.82-.05-1.65-.04-2.47.01-1.54.07-3.07.21-4.61.04-.32.06-.64.1-.96.23-2.36.5-4.93.85-7.21v-.02c.16-2.58.34-4.95.59-7.27.01-.07.01-.15.02-.22-.12-1.3-.38-2.62-.98-3.74-.22-.38-.47-.76-.79-1.09-.57-.6-1.29-.93-2.04-1.02-.85-.09-1.73.15-2.46.73-1.09.85-1.55,1.98-1.73,3.35l-.04.26c-.25,2.42-.49,4.83-.74,7.25-.01.1-.01.21-.02.31-.04.36-.07.7-.11,1.06-.25,2.46-.49,4.94-.65,7.41-.14,2.02-.23,4.02-.25,6.03-.01.74-.01,1.47.01,2.22.02,1.56.11,3.12.27,4.67.11,1.2.27,2.43,0,3.63-.12.5-.25.96-.44,1.31-.27.52-.66.87-1.35,1.04"/>
+                <path class="hand-detail" d="M51.02,39.28c-.09-.09-.15-.17-.22-.26"/>
+                <path class="hand-outline" d="M56.07,42.32c-.15-.04-.28-.06-.43-.11-.18-.05-.38-.11-.57-.18-.05-.01-.11-.04-.16-.06-1.34-.5-2.64-1.34-3.66-2.41-.07-.09-.16-.17-.23-.26"/>
+                <path class="hand-outline" d="M63.27,91.89s.11-.05.16-.1c.04-.01.07-.02.11-.06,1.08-.64,2-1.94,2.76-3.71.88-2.05,1.57-4.73,2.08-7.74.42-2.46.73-5.15.93-7.89.25-3.38.34-6.84.32-10.08,0-3.08-.12-5.95-.32-8.36.04-1,.06-2-.27-2.94-.04-.14-.11-.26-.16-.39-.52-1.14-1.5-1.99-2.58-2.72-.58-.39-1.19-.75-1.77-1.11-.45-.27-.9-.54-1.29-.81-.16-.11-.32-.23-.47-.34h-.02c-.96-.76-1.65-1.63-1.77-3"/>
+                <path class="hand-outline" d="M60.84,128.07c-.12-1.75-.22-3.49-.25-5.24-.09-2.65-.06-5.31.09-7.96.05-1.04.11-2.1.2-3.15.14-1.61.22-3.16.25-4.74.04-1.52.01-3.08-.11-4.72-.06-.87-.14-1.77-.15-2.67-.01-1.43.1-2.85.55-4.15.54-1.5,1.5-2.26,2.13-3.71.01-.02.02-.06.04-.09"/>
+                <path class="hand-outline" d="M68.87,50.69s.01-.01.02-.06"/>
+                <path class="hand-outline" d="M71.48,31.49c.36-.63,1.29-2.46,1.41-2.69,1.2-2.09.92-1.72,1.93-3.24.07-.09.14-.18.21-.29,1.56-2.33,2.8-2.79,3.63-2.81.42.11.53.11.59.11s.01.02.44.34c.66.86,1.25,1.83,1.13,2.91-.14,1.24-.49,2.64-.96,3.96-.34,1.01-.75,1.97-1.17,2.78-.44.84-.33.73-.87,1.65-.34.45-.69.95-1.02,1.46-.96,1.51-1.84,3.2-2.73,4.68-.64,1.07-1.25,2.15-1.84,3.24-1.24,2.31-2.36,4.68-3.34,7.04"/>
+                <path class="hand-outline" d="M62.88,45.49c1.43-.65,2.02-1.71,2.69-3.15.47-.98.95-1.94,1.46-2.9.42-.77.86-1.54,1.31-2.29,1.01-1.68,1.84-3.9,3.02-5.47.02-.04.06-.1.11-.18"/>
+                <path class="hand-outline" d="M62.92,4.59c.33,0,.64.01.91.06,1.16.12,1.83.57,2.48,1.54.84,1.27,1.03,2.85.96,4.49-.07,1.55-.38,3.13-.63,4.55-.18,1.03-.25,1.56-.42,2.29-.07.29-.16.61-.27,1.02-.42,1.41,0-.34-.85,3.39-.18.85-.49,2.13-.76,3.37-.22.96-.41,1.89-.52,2.56-.31,1.09-1.33,5.11-1.33,5.11-.45,1.02-.15.87-.55,1.9-.07.18-.14.37-.2.58-.48,1.59-.64,3.67-.59,5.25.04.65-.17,1.24-.17,1.87v.1"/>
+                <path class="hand-outline" d="M62.92,4.59s-.04.06-.04,0h.04Z"/>
+                <path class="hand-outline" d="M56.25,25.38s.02-.1.04-.2c.06-.32.37-1.7.7-3.1.34-1.4.7-2.8.85-3.16.43-2.14.7-3.53.92-4.58.44-2.21.63-2.94,1.54-5.98.04-.16.1-.33.15-.52.31-1.04.79-2.08.96-2.33l.61-.61c.77-.39.91-.36.91-.31"/>
+                <path class="hand-outline" d="M56.28,25.25s0,.01-.01.04v.02s-.01.04-.01.05,0,.04-.01.05"/>
+                <path class="hand-outline" d="M50.91,39.79l.11-.07c.09-.05.16-.1.23-.16,1.51-1.06,1.36-1.25,2.02-2.99.52-1.39,1.03-3.39,1.47-5.12.16-.61.31-1.19.45-1.7.07-.23.97-3.96,1.01-4.18.01-.05.02-.09.02-.12t.01-.02h0v-.04s0-.01.01-.02"/>
+                <path class="hand-outline" d="M38.17,39.47c.14.09.28.16.44.21.25.1.52.15.82.15"/>
+                <path class="hand-outline" d="M30.03,17.3c.15.48.31.96.47,1.44.7,2.15,1.4,4.29,2.1,6.43.25.76.5,1.54.75,2.3.63,1.89,1.24,3.78,1.86,5.68.29.92.6,1.83.9,2.75.31.92.63,1.89,1.13,2.63.06.11.14.2.21.28.07.1.15.18.23.27.12.12.26.23.39.32.04.02.06.05.1.07"/>
+                <path class="hand-outline" d="M.36,51.14c.2-.64.61-1.24,1.17-1.68.47-.38,1.03-.64,1.61-.7,3.06-.32,4.14-.16,5.58.52.32.15.65.32,1.02.52,1.18.61,2.49.98,3.49,1.87.22.2.44.38.65.58.31.27.6.54.88.81,1.79,1.66,3.51,3.4,5.16,5.21,1.29,1.41,2.54,2.86,3.74,4.36.29.36.59.74.98.93.07.06.15.1.23.12.57.2,1.07.05,1.5-.29.71-.55,1.24-1.62,1.47-2.54.36-1.38.66-2.75.92-4.15.05-.29.11-.58.16-.87.37-2.16.6-4.37.7-6.57.04-.7.06-1.4.06-2.1.01-1.34-.02-2.7-.21-4.02-.01-.11-.02-.23-.05-.34-.07-.44-.16-.86-.27-1.3-.41-1.55-1.09-3.01-1.72-4.47-.04-.11-.09-.22-.14-.33-.76-1.79-1.43-3.61-2.03-5.47-.21-.64-.41-1.28-.59-1.92-.71-2.41-1.31-4.84-1.87-7.3-.04-.12-.06-.23-.09-.36-.52-2.24-.97-4.49-1.44-6.73-.01-.09-.04-.16-.05-.25-.27-1.35-.52-2.75-.22-4.13.28-1.25,1.17-2.46,2.36-2.83.18-.06.37-.1.55-.11,1.93-.18,3.22,1.62,4.02,3.51.17.41.32.82.45,1.22.53,1.66,1.07,3.32,1.62,4.98"/>
+                <path class="hand-outline" d="M33.66,90.59c-.58-.16-1.12-.38-1.62-.64-1.7-.88-3.05-2.3-4.19-3.93-.87-1.24-1.63-2.61-2.33-3.96-.07-.14-.15-.27-.21-.42-.79-1.52-1.55-3.13-2.46-4.62-.23-.41-.48-.79-.74-1.17-1.03-1.49-2.25-2.78-3.82-3.64-1.61-.87-2.21-2.62-2.81-4.42-.45-1.34-.91-2.7-1.77-3.75-.16-.18-.33-.38-.5-.55-.59-.55-1.28-1.02-1.93-1.56-.47-.38-.91-.8-1.33-1.23-1.39-1.38-2.63-2.92-4.09-4.18-.04-.04-.09-.07-.12-.11-.63-.54-1.31-1.01-2.09-1.4-1.27-.64-2.84-1.14-3.28-2.47-.14-.43-.14-.86-.04-1.29"/>
+                <path class="hand-detail" d="M40.64,38.74l.15.04c1.44.45,2.94.76,4.47.9"/>
+                <path class="hand-outline" d="M38.17,39.47c-.34-.34-.65-.66-.93-.95-.09-.07-.14-.15-.21-.22"/>
+                <path class="hand-outline" d="M30.43,125.53c.27-1.67.54-3.34.79-5.01.37-2.57.65-5.15.74-7.73.06-1.89.01-3.8-.21-5.69-.09-.79-.16-1.65-.25-2.51-.1-1.36-.2-2.76-.28-4.01-.09-1.17-.1-2.3-.07-3.42.09-2.37.41-4.66.85-7.12"/>
+                <path class="hand-outline" d="M63.27,91.89c-.6,1.94-4.5,1.29-7.26.54-1.09-.31-2-.61-2.47-.79-1.23-.15-2.45-.54-3.66-.66-.66-.06-1.31,0-1.95.12-1.68.31-3.34,1.03-5.06,1.09-1.07.05-2.64-.01-4.22-.2-1.97-.23-3.94-.68-4.99-1.41"/>
+                <path class="hand-detail" d="M23.36,7.61s.01.05.02.07c.58,1.95,1.17,3.91,1.75,5.86.02.07.05.16.07.23.74,2.45,1.46,4.87,2.19,7.31l.15.52c.7,2.31,1.39,4.63,2.08,6.94.6,2.05,1.22,4.12,1.83,6.17.1.31.18.61.28.93.61,2,1.25,4.01,2.18,5.89"/>
+                <path class="hand-detail" d="M46.99.25c-.01.1-.04.2-.05.29-.34,1.88-.64,3.77-.88,5.67-.33,2.32-.59,4.65-.79,6.98-.25,2.65-.41,5.33-.48,8-.1,2.65-.11,5.31-.05,7.98.07,3.49.28,6.99.61,10.47"/>
+                <path class="hand-detail" d="M63.83,4.68c.14,1.7.05,3.61-.18,5.49-.17,1.44-.42,2.85-.7,4.12-.18.81-.37,1.62-.57,2.43-.6,2.61-1.25,5.19-1.94,7.77-.87,3.23-1.79,6.44-2.78,9.62-.82,2.65-1.68,5.3-2.58,7.91t-.01.02"/>
+                <path class="hand-detail" d="M79.24,22.68c-.26,1.97-1.08,3.75-2.09,5.47-.79,1.34-1.68,2.63-2.49,3.94-.6.96-1.19,1.93-1.76,2.91-1.36,2.3-2.63,4.63-3.82,7-.97,1.94-1.89,3.91-2.76,5.9"/>
+                <path class="hand-detail" d="M1.39,49.4s.09.05.14.06c2.31,1.12,4.6,2.26,6.86,3.45.37.18.75.38,1.12.58.73.38,1.46.77,2.05,1.34.65.6,1.09,1.38,1.52,2.16.47.87.91,1.77,1.56,2.51.93,1.06,2.22,1.71,3.23,2.67.34.32.65.68.93,1.06.8,1.02,1.41,2.19,2.18,3.23,1.03,1.44,2.52,2.76,4.29,2.8"/>
+                <path class="hand-detail" d="M45.26,39.68s.06-.01.1-.02c1.82-.36,3.45-.63,5.32-.53"/>
+                <path class="hand-detail" d="M55.66,42.15c1.6,0,5.11,1.97,5.19.39.01-.11,0-.25-.04-.39"/>
+                <path class="hand-detail" d="M29.35,43.17s.09-.04.14-.05c1.47-.53,2.95-1.04,4.42-1.57,1.43-.52,2.89-1.04,4.07-2"/>
+                <path class="hand-detail" d="M24.58,63.66c.33,1.83.66,3.67.7,5.53.01.02.01.04,0,.06.02.64,0,1.29-.06,1.93-.1,1.01-.32,2.02-.82,2.89-.5.86-1.31,1.57-2.29,1.78-.01,0-.04.01-.05.01"/>
+                <path class="hand-detail" d="M38.55,39.85c.12,2.43.23,4.89.33,7.36.05,1.43.1,2.86.15,4.3.05,1.59.09,3.17.12,4.76.05,2.96.07,5.9.06,8.81-.01,3.42-.05,6.81-.12,10.16-.06,3.53-.16,7.02-.26,10.48-.06,2.1-.12,4.2-.18,6.28-.28,1.45-.23,3.7-.36,6.4,0,.1-.01.2-.01.29-.15,3.34.11,5.87.23,7.13.01.07.01.14.02.2.21,1.99.41,4.61.48,8,.05,2.22.04,4.78-.05,7.69"/>
+                <path class="hand-detail" d="M51.02,39.28h0v.43c0,2.79.01,5.54.01,8.28,0,3.93.01,7.83.01,11.77v6.33c0,.98,0,1.92-.01,2.85-.02,1.86-.1,3.72-.32,6-.15,1.54-.33,2.85-.54,4.12-.18,1.16-.41,2.27-.63,3.45-.22,1.14-.48,2.53-.81,4.26-.23,1.25-.5,2.68-.81,4.33-.25,1.46-.57,3.72-.77,6.5h0c-.21,2.84-.26,5.03-.22,7.43.02,1.52.09,3.12.16,5.03.04.91.06,1.99.07,3.21.01,2.14-.02,4.74-.21,7.71"/>
+                <path class="hand-detail" d="M63.25,45.99c-.9,3.01-1.54,5.7-1.99,8.05-.44,2.32-.73,4.3-.9,5.91-.15,1.36-.33,3.48-.48,5.46-.37,5.03-.23,5.86-.53,8.91-.23,2.52-.61,4.56-1.36,8.63-.29,1.59-.66,3.49-1.13,5.68-.26,1.19-.54,2.46-.85,3.81-.43,1.27-1.02,3.24-1.43,5.7h0c-.21,1.28-.34,2.41-.42,3.5-.1,1.4-.12,2.68-.1,3.81.02,1.95.18,3.44.26,4.19.1,1.12.2,2.45.22,3.99.06,2.16.01,4.76-.26,7.8"/>
+                <path class="hand-detail" d="M29.22,55.86c.15.58.27,1.14.39,1.72.66,3.04,1.07,6.06,1.2,9.08.12,2.7.02,5.39-.28,8.09-.41,3.72-1.23,7.43-2.45,11.11"/>
+                <path class="hand-detail" d="M29.75,49.24c1.79-.41,3.58-.81,5.36-1.23,1.25-.28,2.51-.58,3.77-.8,1.45-.27,2.91-.47,4.39-.49,2.64-.06,5.26.42,7.77,1.28,2.33.82,4.56,1.97,6.6,3.35,1.2.81,2.42,1.71,3.63,2.69,3.07,2.46,6.05,5.36,8.28,8.27"/>
+                <path class="hand-detail" d="M29.62,57.58c3.08-1.04,6.32-1.47,9.54-1.31,3.82.18,7.62,1.22,11.05,3.04.28.15.57.31.85.47,1.35.76,2.65,1.62,3.98,2.42,1,.59,2,1.14,2.96,1.79.65.44,1.28.93,1.89,1.43.27.22.53.43.8.65,2.08,1.71,6.55,4.62,8.63,6.33"/>
+                <path class="hand-detail" d="M25.22,69.23s.04-.02.06-.04c1.79-.92,3.64-1.82,5.54-2.53,2.38-.92,4.84-1.55,7.37-1.6.34-.01.69,0,1.02.01,4.17.15,8.18,1.79,11.82,3.87.2.12.41.23.6.36,1.66.98,3.27,2.05,4.88,3.13.8.53,1.78,1.18,2.84,1.88,3.02,1.99,6.73,4.42,9.03,5.96"/>
+                <path class="hand-detail" d="M23.03,76.91c2.45-.86,4.95-1.75,7.51-2.16,1.03-.17,2.08-.27,3.13-.26,1.83.01,3.64.33,5.42.75.71.17,1.43.34,2.14.53,2.92.74,5.91,1.5,8.5,3.05.15.09.29.17.44.25,1.45.8,3.06,1.38,4.49,2.2.91.52,2.08,1.08,3.33,1.68,3.04,1.47,6.61,3.2,8.32,5.08"/>
+                <path class="hand-detail" d="M28.09,85.86c2.83-.17,5.67-.26,8.49-.26.32,0,1.03.04,2.25.12.8.07,1.81.16,3.07.29,2.72.28,4.92.5,6.83.76,3.12.42,5.48.92,8.12,1.84,1.61.57,3.88,1.5,6.49,3.02"/>
+                <path class="hand-detail" d="M6.03,56.33c.53-.74,1.07-1.47,1.6-2.21.22-.31.44-.6.61-.93.05-.09.1-.18.14-.27.57-1.22.48-2.25.33-3.64"/>
+                <path class="hand-detail" d="M9.9,60.75s.02-.04.04-.05c.73-.95,1.76-1.62,2.47-2.57.27-.36.49-.74.66-1.14.64-1.44.75-3.13.8-4.76.01-.05.01-.1.01-.15"/>
+                <path class="hand-detail" d="M15.68,67.72c1.38-1.22,2.45-2.78,3.12-4.5.6-1.5.91-3.12.86-4.73"/>
+                <path class="hand-detail" d="M21.25,14.64c1.41-.16,2.59-.43,3.96-.86.05-.01.11-.04.16-.05,1.17-.38,2.54-1.18,2.59-2.64"/>
+                <path class="hand-detail" d="M22.82,21.98c1.04.16,1.76.27,2.81.17.66-.06,1.33-.23,1.9-.54.36-.18.68-.42.95-.7.79-.84,1.28-2.51,1.55-3.61h0"/>
+                <path class="hand-detail" d="M24.59,29.26s.06.01.1.02c1.7.41,3.45.11,4.93-.73,1.33-.74,2.41-1.92,2.99-3.39"/>
+                <path class="hand-detail" d="M27.45,37c1.38.64,2.61-.11,3.82-1.01.15-.11.31-.22.45-.33,1.11-.85,2.32-1.86,3.47-2.52"/>
+                <path class="hand-detail" d="M42.67,4.58s.06.04.09.05c1,.71,2.11,1.25,3.31,1.59,1.43.42,2.95.55,4.44.38"/>
+                <path class="hand-detail" d="M41.95,12.44c1.18.26,2.21.5,3.32.75.39.09.81.18,1.24.27,1.36.28,2.06.57,3.47.42"/>
+                <path class="hand-detail" d="M41.19,20.91c1.29.16,2.46.25,3.6.28,1.45.07,2.88.04,4.5-.06"/>
+                <path class="hand-detail" d="M40.95,29.17h8.17"/>
+                <path class="hand-detail" d="M60.3,8.36c1.09.73,2.2,1.38,3.34,1.81,1.13.43,2.32.64,3.6.5"/>
+                <path class="hand-detail" d="M58.64,14.31l.11.04c1.33.47,2.36,1.5,3.51,2.3l.11.07c1.13.77,2.59,1.33,3.85.79.02-.01.06-.02.09-.04"/>
+                <path class="hand-detail" d="M57.04,22.09c.86,1.03,2.06,1.86,3.39,2.4,1.22.52,2.52.77,3.76.77"/>
+                <path class="hand-detail" d="M54.62,31.22c.04.07.07.15.12.22.64,1.18,1.7,2.09,2.91,2.67,1,.48,2.09.74,3.18.74.29,0,.58-.01.86-.05"/>
+                <path class="hand-detail" d="M74.84,25.57c.7,1.14,1.44,1.93,2.31,2.58.75.58,1.61,1.06,2.64,1.6"/>
+                <path class="hand-detail" d="M71.48,31.49h0c-.21,1.12.54,2.67,1.41,3.51.1.1.21.2.31.27,1.01.77,3.59.38,3.6.38"/>
+                <path class="hand-detail" d="M66.94,39.26c.02.06.06.12.1.18.48,1,1.19,1.87,2.04,2.57.9.73,1.94,1.25,3.06,1.52"/>
+                <path class="hand-detail hand-miter" d="M31.15,97.16c1.62.61,4.06,1.29,7,1.24h.14c1.28-.04,1.94-.21,3.28-.38,1.99-.28,3.87-.39,5.58-.41,3.35-.04,6.03.31,7.43.53.23.02.42.06.58.09,1.36.22,3.33.63,5.7,1.36h.01"/>
+                <path class="hand-detail hand-miter" d="M31.51,104.59c1.62.6,4.06,1.29,7,1.24,1.36-.02,2.04-.2,3.42-.39,1.76-.25,3.45-.36,5-.39,3.01-.07,5.52.18,7.14.41.63.07,1.12.15,1.45.21,1.34.22,3.28.6,5.6,1.33l.11.04"/>
+                <path class="hand-detail hand-miter" d="M32.09,112.78c3.17.87,5.68,1.25,6.93,1.24h.07c.49-.01.98-.05.98-.05.8-.07,1.43-.2,2.43-.33.65-.1,2.33-.31,4.66-.37,2.05-.06,4.6-.01,7.39.36.5.06,1.02.14,1.55.22,1.12.18,2.7.49,4.57,1.02"/>
+                <path class="hand-outline hand-miter" d="M31.21,120.51c1.62.6,4.06,1.29,7,1.24.27,0,.52-.01.75-.04.91-.06,1.56-.2,2.67-.36.54-.07,2.53-.33,5.32-.37,2.09-.04,4.62.06,7.34.44.31.05.63.1.93.15,1.29.21,3.15.58,5.35,1.25"/>
+              </g>
+            </g>
+          </svg>
+
+          <div class="completion-panel" id="completion-panel" role="dialog" aria-modal="true" aria-labelledby="completion-title">
+            <div class="completion-content">
+              <span class="section-kicker">Study complete</span>
+              <h2 id="completion-title">All hands are cached</h2>
+              <p id="completion-message">Download the complete vector dataset and manifest as one ZIP file.</p>
+              <div class="completion-actions">
+                <button class="button" id="review-first" type="button">Review first hand</button>
+                <button class="button button-primary" id="completion-download" type="button">Download all as ZIP</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="workspace-footer">
+        <div class="footer-left">
+          <button class="button" id="undo-button" type="button" disabled>Undo</button>
+          <button class="button" id="clear-button" type="button">Clear hand</button>
+        </div>
+        <div class="autosave-status" id="autosave-status"><strong>Cached locally</strong><br>Current hand is ready</div>
+        <div class="footer-right">
+          <button class="button" id="download-all" type="button">Download cached ZIP</button>
+          <button class="button button-primary" id="next-button" type="button">Save SVG + next --&gt;</button>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // --- Study constants ---
+    const CHANNEL_ORDER = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09"];
+    const DEFAULT_CHANNELS = ["00", "01", "03", "04", "05", "06", "07", "08", "09"];
+    const STORAGE_KEY = "hand-percept-mapper-study-v3";
+    const MAX_UNDO = 30;
+
+    const elements = {
+      participantId: document.getElementById("participant-id"),
+      firstRole: document.getElementById("first-role"),
+      studyLimit: document.getElementById("study-limit"),
+      selectedCount: document.getElementById("selected-count"),
+      pairCount: document.getElementById("pair-count"),
+      generateStudy: document.getElementById("generate-study"),
+      intensityRail: document.getElementById("intensity-rail"),
+      intensityThumb: document.getElementById("intensity-thumb"),
+      intensityHeading: document.getElementById("intensity-value-heading"),
+      intensityReadout: document.getElementById("intensity-readout"),
+      colorChip: document.getElementById("color-chip"),
+      fillTool: document.getElementById("fill-tool"),
+      eraseTool: document.getElementById("erase-tool"),
+      sequenceList: document.getElementById("sequence-list"),
+      sequenceProgress: document.getElementById("sequence-progress"),
+      pairTitle: document.getElementById("pair-title"),
+      pairPosition: document.getElementById("pair-position"),
+      anodeChannel: document.getElementById("anode-channel"),
+      cathodeChannel: document.getElementById("cathode-channel"),
+      handSvg: document.getElementById("hand-svg"),
+      handSvgTitle: document.getElementById("hand-svg-title"),
+      handTransform: document.getElementById("hand-transform"),
+      previousButton: document.getElementById("previous-button"),
+      swapPolarity: document.getElementById("swap-polarity"),
+      undoButton: document.getElementById("undo-button"),
+      clearButton: document.getElementById("clear-button"),
+      downloadAll: document.getElementById("download-all"),
+      nextButton: document.getElementById("next-button"),
+      autosaveStatus: document.getElementById("autosave-status"),
+      completionPanel: document.getElementById("completion-panel"),
+      completionMessage: document.getElementById("completion-message"),
+      reviewFirst: document.getElementById("review-first"),
+      completionDownload: document.getElementById("completion-download"),
+      toast: document.getElementById("toast")
+    };
+
+    let intensity = 1;
+    let activeTool = "fill";
+    let undoStack = [];
+    let toastTimer = null;
+    let handRegionsReady = false;
+    let state = loadState();
+
+    // --- Anatomical region generation ---
+    const HAND_WIDTH = 81.09;
+    const HAND_HEIGHT = 128.32;
+    const REGION_RASTER_SCALE = 16;
+    const REGION_LINE_THRESHOLD = 225;
+    const MIN_REGION_PIXEL_AREA = 100;
+
+    /**
+     * Converts the supplied anatomical line art into closed selectable vector cells.
+     * The raster pass is used only to discover boundaries. The resulting regions
+     * are SVG paths, so painting and downloaded study files remain true vector art.
+     *
+     * @returns {Promise<void>} resolves when selectable regions are ready
+     */
+    async function initializeHandRegions() {
+      elements.handSvg.setAttribute("aria-busy", "true");
+      setPaintingControlsDisabled(true);
+      updateAutosave("Preparing hand", "Detecting anatomical boundaries");
+
+      const lineArt = elements.handSvg.cloneNode(true);
+      const clonedRegionLayer = lineArt.querySelector("#region-layer");
+      if (clonedRegionLayer) {
+        clonedRegionLayer.remove();
+      }
+      prepareLineArtForStandaloneSvg(lineArt);
+      lineArt.setAttribute("width", String(HAND_WIDTH));
+      lineArt.setAttribute("height", String(HAND_HEIGHT));
+
+      const serialized = new XMLSerializer().serializeToString(lineArt);
+      const image = await loadSvgImage(serialized);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(HAND_WIDTH * REGION_RASTER_SCALE);
+      canvas.height = Math.ceil(HAND_HEIGHT * REGION_RASTER_SCALE);
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+      const barriers = buildBarrierMask(pixels.data, canvas.width, canvas.height);
+      const segmentation = labelOpenAreas(barriers, canvas.width, canvas.height);
+      createRegionPaths(segmentation, canvas.width, canvas.height);
+
+      handRegionsReady = true;
+      elements.handSvg.removeAttribute("aria-busy");
+      elements.handSvg.dataset.regionCount = String(elements.handSvg.querySelectorAll(".hand-region").length);
+      setPaintingControlsDisabled(false);
+      renderWorkspace();
+    }
+
+    /**
+     * Loads an SVG string into an image suitable for an offscreen canvas.
+     *
+     * @param {string} svgSource serialized SVG line art
+     * @returns {Promise<HTMLImageElement>} decoded image
+     */
+    function loadSvgImage(svgSource) {
+      return new Promise((resolve, reject) => {
+        const blob = new Blob([svgSource], { type: "image/svg+xml" });
+        const objectUrl = URL.createObjectURL(blob);
+        const image = new Image();
+        image.addEventListener("load", () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(image);
+        }, { once: true });
+        image.addEventListener("error", () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("The anatomical SVG could not be rasterized for boundary detection."));
+        }, { once: true });
+        image.src = objectUrl;
+      });
+    }
+
+    /**
+     * Builds a one-pixel-expanded mask for every visible anatomical stroke.
+     * Expanding the mask closes anti-aliased subpixel gaps at line intersections.
+     *
+     * @param {Uint8ClampedArray} rgba canvas pixels
+     * @param {number} width canvas width
+     * @param {number} height canvas height
+     * @returns {Uint8Array} barrier mask
+     */
+    function buildBarrierMask(rgba, width, height) {
+      const source = new Uint8Array(width * height);
+      for (let pixelIndex = 0; pixelIndex < source.length; pixelIndex += 1) {
+        const rgbaIndex = pixelIndex * 4;
+        const isLine = rgba[rgbaIndex] < REGION_LINE_THRESHOLD
+          && rgba[rgbaIndex + 1] < REGION_LINE_THRESHOLD
+          && rgba[rgbaIndex + 2] < REGION_LINE_THRESHOLD;
+        if (isLine) {
+          source[pixelIndex] = 1;
+        }
+      }
+
+      const expanded = source.slice();
+      for (let y = 1; y < height - 1; y += 1) {
+        for (let x = 1; x < width - 1; x += 1) {
+          const index = (y * width) + x;
+          if (source[index] === 0) {
+            continue;
+          }
+          for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+            for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+              expanded[index + (offsetY * width) + offsetX] = 1;
+            }
+          }
+        }
+      }
+      return expanded;
+    }
+
+    /**
+     * Labels every connected open area separated by anatomical strokes.
+     *
+     * @param {Uint8Array} barriers line barrier mask
+     * @param {number} width canvas width
+     * @param {number} height canvas height
+     * @returns {{labels: Int32Array, components: object[]}} segmentation data
+     */
+    function labelOpenAreas(barriers, width, height) {
+      const labels = new Int32Array(width * height);
+      const queue = new Int32Array(width * height);
+      const components = [];
+      let nextLabel = 0;
+
+      for (let start = 0; start < labels.length; start += 1) {
+        if (barriers[start] !== 0 || labels[start] !== 0) {
+          continue;
+        }
+
+        nextLabel += 1;
+        let head = 0;
+        let tail = 1;
+        queue[0] = start;
+        labels[start] = nextLabel;
+        const component = {
+          label: nextLabel,
+          area: 0,
+          minX: width,
+          minY: height,
+          maxX: 0,
+          maxY: 0
+        };
+
+        while (head < tail) {
+          const index = queue[head];
+          head += 1;
+          const x = index % width;
+          const y = Math.floor(index / width);
+          component.area += 1;
+          component.minX = Math.min(component.minX, x);
+          component.minY = Math.min(component.minY, y);
+          component.maxX = Math.max(component.maxX, x);
+          component.maxY = Math.max(component.maxY, y);
+
+          if (x > 0) {
+            tail = enqueueOpenPixel(index - 1, nextLabel, barriers, labels, queue, tail);
+          }
+          if (x < width - 1) {
+            tail = enqueueOpenPixel(index + 1, nextLabel, barriers, labels, queue, tail);
+          }
+          if (y > 0) {
+            tail = enqueueOpenPixel(index - width, nextLabel, barriers, labels, queue, tail);
+          }
+          if (y < height - 1) {
+            tail = enqueueOpenPixel(index + width, nextLabel, barriers, labels, queue, tail);
+          }
+        }
+        components.push(component);
+      }
+      return { labels, components };
+    }
+
+    /**
+     * Adds one open pixel to the connected-component queue when it is unvisited.
+     *
+     * @param {number} index pixel index
+     * @param {number} label active component label
+     * @param {Uint8Array} barriers line barrier mask
+     * @param {Int32Array} labels component labels
+     * @param {Int32Array} queue flood-fill queue
+     * @param {number} tail current queue tail
+     * @returns {number} updated queue tail
+     */
+    function enqueueOpenPixel(index, label, barriers, labels, queue, tail) {
+      if (barriers[index] !== 0 || labels[index] !== 0) {
+        return tail;
+      }
+      labels[index] = label;
+      queue[tail] = index;
+      return tail + 1;
+    }
+
+    /**
+     * Creates stable SVG paths for all meaningful areas inside the hand outline.
+     *
+     * @param {{labels: Int32Array, components: object[]}} segmentation segmentation data
+     * @param {number} width canvas width
+     * @param {number} height canvas height
+     */
+    function createRegionPaths(segmentation, width, height) {
+      const outsideLabel = segmentation.labels[0];
+      const components = segmentation.components.filter((component) => {
+        return component.label !== outsideLabel && component.area >= MIN_REGION_PIXEL_AREA;
+      });
+      components.sort((first, second) => {
+        if (first.minY !== second.minY) {
+          return first.minY - second.minY;
+        }
+        return first.minX - second.minX;
+      });
+
+      const regionLayer = elements.handSvg.querySelector("#region-layer");
+      regionLayer.replaceChildren();
+      components.forEach((component, index) => {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const regionNumber = String(index + 1).padStart(3, "0");
+        path.setAttribute("class", "hand-region");
+        path.setAttribute("data-region", `region-${regionNumber}`);
+        path.setAttribute("aria-label", `Percept region ${index + 1}`);
+        path.setAttribute("fill-rule", "evenodd");
+        path.setAttribute("d", traceComponentPath(component, segmentation.labels, width, height));
+        regionLayer.appendChild(path);
+      });
+    }
+
+    /**
+     * Traces the pixel boundary of one connected component into compact SVG loops.
+     *
+     * @param {object} component component bounds and label
+     * @param {Int32Array} labels component label map
+     * @param {number} width canvas width
+     * @param {number} height canvas height
+     * @returns {string} SVG path commands
+     */
+    function traceComponentPath(component, labels, width, height) {
+      const vertexWidth = width + 1;
+      const outgoingEdges = new Map();
+      const addEdge = (startX, startY, endX, endY) => {
+        const start = (startY * vertexWidth) + startX;
+        const end = (endY * vertexWidth) + endX;
+        if (!outgoingEdges.has(start)) {
+          outgoingEdges.set(start, []);
+        }
+        outgoingEdges.get(start).push(end);
+      };
+
+      for (let y = component.minY; y <= component.maxY; y += 1) {
+        for (let x = component.minX; x <= component.maxX; x += 1) {
+          const index = (y * width) + x;
+          if (labels[index] !== component.label) {
+            continue;
+          }
+          if (y === 0 || labels[index - width] !== component.label) {
+            addEdge(x, y, x + 1, y);
+          }
+          if (x === width - 1 || labels[index + 1] !== component.label) {
+            addEdge(x + 1, y, x + 1, y + 1);
+          }
+          if (y === height - 1 || labels[index + width] !== component.label) {
+            addEdge(x + 1, y + 1, x, y + 1);
+          }
+          if (x === 0 || labels[index - 1] !== component.label) {
+            addEdge(x, y + 1, x, y);
+          }
+        }
+      }
+
+      const loops = [];
+      while (outgoingEdges.size > 0) {
+        const start = outgoingEdges.keys().next().value;
+        const points = [vertexToPoint(start, vertexWidth)];
+        let current = start;
+        let previousDirection = null;
+        let isClosed = false;
+
+        while (!isClosed) {
+          const candidates = outgoingEdges.get(current);
+          if (!candidates || candidates.length === 0) {
+            break;
+          }
+          const selectedIndex = chooseBoundaryEdge(current, candidates, previousDirection, vertexWidth);
+          const next = candidates.splice(selectedIndex, 1)[0];
+          if (candidates.length === 0) {
+            outgoingEdges.delete(current);
+          }
+          previousDirection = edgeDirection(current, next, vertexWidth);
+          current = next;
+          if (current === start) {
+            isClosed = true;
+          } else {
+            points.push(vertexToPoint(current, vertexWidth));
+          }
+        }
+        if (isClosed && points.length >= 3) {
+          loops.push(removeCollinearPoints(points));
+        }
+      }
+
+      const scaleX = width / HAND_WIDTH;
+      const scaleY = height / HAND_HEIGHT;
+      return loops.map((points) => pointsToSvgPath(points, scaleX, scaleY)).join("");
+    }
+
+    /**
+     * Selects the next oriented boundary edge, favoring a right turn.
+     *
+     * @param {number} current current vertex
+     * @param {number[]} candidates outgoing vertices
+     * @param {number|null} previousDirection incoming direction
+     * @param {number} vertexWidth vertex-grid width
+     * @returns {number} selected candidate index
+     */
+    function chooseBoundaryEdge(current, candidates, previousDirection, vertexWidth) {
+      if (previousDirection === null || candidates.length === 1) {
+        return 0;
+      }
+      const turnPriority = [1, 0, 3, 2];
+      let bestIndex = 0;
+      let bestPriority = turnPriority.length;
+      candidates.forEach((candidate, index) => {
+        const direction = edgeDirection(current, candidate, vertexWidth);
+        const turn = (direction - previousDirection + 4) % 4;
+        const priority = turnPriority.indexOf(turn);
+        if (priority < bestPriority) {
+          bestIndex = index;
+          bestPriority = priority;
+        }
+      });
+      return bestIndex;
+    }
+
+    /** Returns the cardinal direction from one grid vertex to the next. */
+    function edgeDirection(start, end, vertexWidth) {
+      const difference = end - start;
+      if (difference === 1) {
+        return 0;
+      }
+      if (difference === vertexWidth) {
+        return 1;
+      }
+      if (difference === -1) {
+        return 2;
+      }
+      return 3;
+    }
+
+    /** Returns an integer point for a packed vertex-grid index. */
+    function vertexToPoint(vertex, vertexWidth) {
+      return {
+        x: vertex % vertexWidth,
+        y: Math.floor(vertex / vertexWidth)
+      };
+    }
+
+    /** Removes intermediate points along straight horizontal or vertical runs. */
+    function removeCollinearPoints(points) {
+      return points.filter((point, index) => {
+        const previous = points[(index - 1 + points.length) % points.length];
+        const next = points[(index + 1) % points.length];
+        const isVertical = previous.x === point.x && point.x === next.x;
+        const isHorizontal = previous.y === point.y && point.y === next.y;
+        return !isVertical && !isHorizontal;
+      });
+    }
+
+    /** Converts a compact integer loop into SVG path commands. */
+    function pointsToSvgPath(points, scaleX, scaleY) {
+      if (points.length === 0) {
+        return "";
+      }
+      const first = points[0];
+      let path = `M${formatCoordinate(first.x / scaleX)},${formatCoordinate(first.y / scaleY)}`;
+      for (let index = 1; index < points.length; index += 1) {
+        const previous = points[index - 1];
+        const point = points[index];
+        if (previous.y === point.y) {
+          path += `H${formatCoordinate(point.x / scaleX)}`;
+        } else if (previous.x === point.x) {
+          path += `V${formatCoordinate(point.y / scaleY)}`;
+        } else {
+          path += `L${formatCoordinate(point.x / scaleX)},${formatCoordinate(point.y / scaleY)}`;
+        }
+      }
+      return `${path}Z`;
+    }
+
+    /** Formats generated SVG coordinates without unnecessary trailing zeroes. */
+    function formatCoordinate(value) {
+      return Number(value.toFixed(3));
+    }
+
+    /** Enables or disables actions that require generated hand regions. */
+    function setPaintingControlsDisabled(isDisabled) {
+      elements.fillTool.disabled = isDisabled;
+      elements.eraseTool.disabled = isDisabled;
+      elements.clearButton.disabled = isDisabled;
+      elements.nextButton.disabled = isDisabled;
+      elements.downloadAll.disabled = isDisabled;
+    }
+
+    /**
+     * Applies explicit stroke attributes so cloned SVGs do not depend on page CSS.
+     *
+     * @param {SVGElement} svg cloned hand SVG
+     */
+    function prepareLineArtForStandaloneSvg(svg) {
+      svg.querySelectorAll(".hand-outline, .hand-detail").forEach((node) => {
+        const usesMiterStroke = node.classList.contains("hand-miter");
+        const isOutline = node.classList.contains("hand-outline");
+        node.setAttribute("fill", "none");
+        node.setAttribute("stroke", "#231f20");
+        if (isOutline) {
+          node.setAttribute("stroke-width", "0.5");
+        } else {
+          node.setAttribute("stroke-width", "0.1");
+        }
+        if (usesMiterStroke) {
+          node.setAttribute("stroke-linecap", "butt");
+          node.setAttribute("stroke-linejoin", "miter");
+          node.setAttribute("stroke-miterlimit", "10");
+        } else {
+          node.setAttribute("stroke-linecap", "round");
+          node.setAttribute("stroke-linejoin", "round");
+        }
+        node.removeAttribute("class");
+      });
+    }
+
+    /**
+     * Generates unique channel pairs in the supplied channel order.
+     *
+     * @param {string[]} channels selected stim band channels
+     * @returns {{first: string, second: string}[]} unique choose-2 pairs
+     */
+    function generateCombinations(channels) {
+      const combinations = [];
+      for (let firstIndex = 0; firstIndex < channels.length; firstIndex += 1) {
+        for (let secondIndex = firstIndex + 1; secondIndex < channels.length; secondIndex += 1) {
+          combinations.push({
+            first: channels[firstIndex],
+            second: channels[secondIndex]
+          });
+        }
+      }
+      return combinations;
+    }
+
+    /**
+     * Builds the initial study state with the requested nine-channel setup.
+     *
+     * @returns {object} serializable application state
+     */
+    function createDefaultState() {
+      const combinations = generateCombinations(DEFAULT_CHANNELS);
+      return {
+        version: 3,
+        config: {
+          participantId: "",
+          handSide: "right",
+          firstRole: "anode",
+          selectedChannels: [...DEFAULT_CHANNELS],
+          limit: combinations.length
+        },
+        combinations,
+        drawings: {},
+        currentIndex: 0,
+        complete: false,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    /**
+     * Restores a valid cached study or creates the default study.
+     *
+     * @returns {object} active study state
+     */
+    function loadState() {
+      try {
+        const cached = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (cached && cached.version === 3 && Array.isArray(cached.combinations) && cached.combinations.length > 0) {
+          return cached;
+        }
+      } catch (error) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+      return createDefaultState();
+    }
+
+    /** Saves the entire study to browser-local storage. */
+    function persistState() {
+      state.updatedAt = new Date().toISOString();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        updateAutosave("Cached locally", "Saved just now");
+      } catch (error) {
+        updateAutosave("Cache unavailable", "Download files to avoid data loss");
+        showToast("Browser storage is full or unavailable. Download the current SVG to preserve it.");
+      }
+    }
+
+    /**
+     * Returns the stable key for one electrode pair.
+     *
+     * @param {{first: string, second: string}} combination electrode pair
+     * @returns {string} pair key
+     */
+    function combinationKey(combination) {
+      return `${combination.first}-${combination.second}`;
+    }
+
+    /**
+     * Gets or creates the drawing record for a combination.
+     *
+     * @param {{first: string, second: string}} combination electrode pair
+     * @returns {object} cached drawing record
+     */
+    function getDrawing(combination) {
+      const key = combinationKey(combination);
+      if (!state.drawings[key]) {
+        state.drawings[key] = {
+          fills: {},
+          polaritySwapped: false,
+          completed: false,
+          savedAt: null
+        };
+      }
+      return state.drawings[key];
+    }
+
+    /**
+     * Converts the 0 to 2 intensity scale into the study color scale.
+     *
+     * @param {number} value percept intensity
+     * @returns {string} six-digit hex color
+     */
+    function intensityToColor(value) {
+      const stops = [
+        { value: 0, color: [255, 230, 0] },
+        { value: 0.5, color: [255, 197, 27] },
+        { value: 1, color: [255, 121, 38] },
+        { value: 1.5, color: [233, 61, 28] },
+        { value: 2, color: [167, 15, 10] }
+      ];
+      const clamped = Math.max(0, Math.min(2, value));
+      let lower = stops[0];
+      let upper = stops[stops.length - 1];
+      for (let index = 0; index < stops.length - 1; index += 1) {
+        if (clamped >= stops[index].value && clamped <= stops[index + 1].value) {
+          lower = stops[index];
+          upper = stops[index + 1];
+          break;
+        }
+      }
+      const range = upper.value - lower.value;
+      const ratio = range === 0 ? 0 : (clamped - lower.value) / range;
+      const channels = lower.color.map((channel, index) => Math.round(channel + ((upper.color[index] - channel) * ratio)));
+      return `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+    }
+
+    /**
+     * Updates the active intensity and accessible slider state.
+     *
+     * @param {number} value requested percept intensity
+     */
+    function setIntensity(value) {
+      intensity = Math.round(Math.max(0, Math.min(2, value)) * 10) / 10;
+      const percent = (intensity / 2) * 100;
+      const color = intensityToColor(intensity);
+      elements.intensityThumb.style.top = `calc(${percent}% - 1px)`;
+      elements.intensityHeading.textContent = intensity.toFixed(1);
+      elements.intensityReadout.textContent = `Intensity ${intensity.toFixed(1)}`;
+      elements.intensityRail.setAttribute("aria-valuenow", intensity.toFixed(1));
+      elements.intensityRail.setAttribute("aria-valuetext", intensityLabel(intensity));
+      document.documentElement.style.setProperty("--intensity-color", color);
+    }
+
+    /**
+     * Describes an intensity value for assistive technology.
+     *
+     * @param {number} value percept intensity
+     * @returns {string} human-readable intensity label
+     */
+    function intensityLabel(value) {
+      if (value < 0.7) {
+        return `${value.toFixed(1)}, least intensity range`;
+      }
+      if (value > 1.3) {
+        return `${value.toFixed(1)}, most intensity range`;
+      }
+      return `${value.toFixed(1)}, medium intensity range`;
+    }
+
+    /**
+     * Reads pointer position on the vertical intensity rail.
+     *
+     * @param {PointerEvent|MouseEvent} event pointer input
+     */
+    function setIntensityFromPointer(event) {
+      const bounds = elements.intensityRail.getBoundingClientRect();
+      const ratio = (event.clientY - bounds.top) / bounds.height;
+      setIntensity(ratio * 2);
+    }
+
+    /**
+     * Activates fill or erase mode.
+     *
+     * @param {"fill"|"erase"} tool requested tool
+     */
+    function setTool(tool) {
+      activeTool = tool;
+      elements.fillTool.classList.toggle("active", activeTool === "fill");
+      elements.eraseTool.classList.toggle("active", activeTool === "erase");
+      elements.handSvg.style.cursor = activeTool === "fill" ? "crosshair" : "pointer";
+    }
+
+    /** Records the current drawing before a reversible edit. */
+    function saveUndoState() {
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      undoStack.push(JSON.parse(JSON.stringify(drawing.fills)));
+      if (undoStack.length > MAX_UNDO) {
+        undoStack.shift();
+      }
+      elements.undoButton.disabled = false;
+    }
+
+    /** Restores the previous region-fill state. */
+    function undo() {
+      if (undoStack.length === 0) {
+        return;
+      }
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      drawing.fills = undoStack.pop();
+      drawing.savedAt = new Date().toISOString();
+      elements.undoButton.disabled = undoStack.length === 0;
+      persistState();
+      renderHand();
+    }
+
+    /**
+     * Applies the active paint tool to an anatomical region.
+     *
+     * @param {SVGElement} region selected SVG region
+     */
+    function paintRegion(region) {
+      if (!handRegionsReady) {
+        return;
+      }
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      const regionId = region.dataset.region;
+      saveUndoState();
+      if (activeTool === "erase") {
+        delete drawing.fills[regionId];
+      } else {
+        drawing.fills[regionId] = {
+          intensity,
+          color: intensityToColor(intensity)
+        };
+      }
+      drawing.savedAt = new Date().toISOString();
+      persistState();
+      renderHand();
+    }
+
+    /** Removes all fills from the current hand while keeping undo available. */
+    function clearCurrentHand() {
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      if (Object.keys(drawing.fills).length === 0) {
+        return;
+      }
+      saveUndoState();
+      drawing.fills = {};
+      drawing.savedAt = new Date().toISOString();
+      persistState();
+      renderHand();
+    }
+
+    /**
+     * Resolves anode and cathode for a pair, including per-hand swaps.
+     *
+     * @param {{first: string, second: string}} combination electrode pair
+     * @param {object} drawing cached drawing
+     * @returns {{anode: string, cathode: string}} resolved polarity
+     */
+    function resolvePolarity(combination, drawing) {
+      const firstIsAnode = state.config.firstRole === "anode";
+      const baseAnode = firstIsAnode ? combination.first : combination.second;
+      const baseCathode = firstIsAnode ? combination.second : combination.first;
+      if (drawing.polaritySwapped) {
+        return { anode: baseCathode, cathode: baseAnode };
+      }
+      return { anode: baseAnode, cathode: baseCathode };
+    }
+
+    /** Swaps anode and cathode for only the current hand. */
+    function swapCurrentPolarity() {
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      drawing.polaritySwapped = !drawing.polaritySwapped;
+      drawing.savedAt = new Date().toISOString();
+      persistState();
+      renderWorkspace();
+    }
+
+    /** Paints the SVG from the cached vector-region values. */
+    function renderHand() {
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      document.querySelectorAll(".hand-region").forEach((region) => {
+        const fill = drawing.fills[region.dataset.region];
+        region.style.fill = fill ? fill.color : "#ffffff";
+      });
+      if (state.config.handSide === "left") {
+        elements.handTransform.setAttribute("transform", "translate(81.09 0) scale(-1 1)");
+      } else {
+        elements.handTransform.removeAttribute("transform");
+      }
+      elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} hand percept map for Ch${combination.first} and Ch${combination.second}`;
+    }
+
+    /** Renders the active combination, polarity, navigation, and progress. */
+    function renderWorkspace() {
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      const polarity = resolvePolarity(combination, drawing);
+      const total = state.combinations.length;
+      const position = String(state.currentIndex + 1).padStart(2, "0");
+      const completedCount = state.combinations.filter((item) => getDrawing(item).completed).length;
+
+      elements.pairTitle.textContent = `Ch${combination.first} / Ch${combination.second}`;
+      elements.pairPosition.textContent = `Hand ${position} of ${total}`;
+      elements.anodeChannel.textContent = `Ch${polarity.anode}`;
+      elements.cathodeChannel.textContent = `Ch${polarity.cathode}`;
+      elements.previousButton.disabled = state.currentIndex === 0;
+      elements.nextButton.textContent = state.currentIndex === total - 1 ? "Save SVG + finish" : "Save SVG + next -->";
+      elements.sequenceProgress.textContent = `${completedCount} / ${total}`;
+      elements.completionPanel.classList.toggle("show", state.complete);
+      elements.completionMessage.textContent = `${completedCount} of ${total} hands are complete. Download the vector dataset and manifest as one ZIP file.`;
+      undoStack = [];
+      elements.undoButton.disabled = true;
+      renderHand();
+      renderSequence();
+      updateAutosave("Cached locally", drawing.savedAt ? "Current hand restored" : "Current hand is ready");
+    }
+
+    /** Renders a selectable index of every generated pair. */
+    function renderSequence() {
+      elements.sequenceList.replaceChildren();
+      state.combinations.forEach((combination, index) => {
+        const drawing = getDrawing(combination);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "sequence-item";
+        if (index === state.currentIndex) {
+          button.classList.add("current");
+          button.setAttribute("aria-current", "step");
+        }
+        if (drawing.completed) {
+          button.classList.add("done");
+        }
+        button.innerHTML = `<span class="sequence-number">${String(index + 1).padStart(2, "0")}</span><span class="sequence-pair">Ch${combination.first} / Ch${combination.second}</span><span class="sequence-state" aria-label="${drawing.completed ? "Complete" : "Not complete"}"></span>`;
+        button.addEventListener("click", () => navigateTo(index));
+        elements.sequenceList.appendChild(button);
+      });
+      const current = elements.sequenceList.querySelector(".current");
+      if (current) {
+        current.scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    /** Copies the saved study config into the config controls. */
+    function renderConfig() {
+      elements.participantId.value = state.config.participantId || "";
+      elements.firstRole.value = state.config.firstRole;
+      elements.studyLimit.value = state.config.limit;
+      document.querySelector(`input[name="hand-side"][value="${state.config.handSide}"]`).checked = true;
+      CHANNEL_ORDER.forEach((channel) => {
+        document.getElementById(`channel-${channel}`).checked = state.config.selectedChannels.includes(channel);
+      });
+      updatePairEstimate();
+    }
+
+    /** Updates the pending electrode and pair counts. */
+    function updatePairEstimate() {
+      const channels = readSelectedChannels();
+      const count = (channels.length * (channels.length - 1)) / 2;
+      elements.selectedCount.textContent = channels.length;
+      elements.pairCount.textContent = count;
+      elements.studyLimit.max = Math.max(1, count);
+      if (Number(elements.studyLimit.value) > count || Number(elements.studyLimit.value) < 1) {
+        elements.studyLimit.value = Math.max(1, count);
+      }
+      elements.generateStudy.disabled = count < 1;
+    }
+
+    /**
+     * Reads selected electrodes in fixed stim band order.
+     *
+     * @returns {string[]} ordered selected channels
+     */
+    function readSelectedChannels() {
+      return CHANNEL_ORDER.filter((channel) => document.getElementById(`channel-${channel}`).checked);
+    }
+
+    /** Rebuilds the study from the current sidebar configuration. */
+    function applyStudyConfig() {
+      const channels = readSelectedChannels();
+      const possibleCombinations = generateCombinations(channels);
+      if (possibleCombinations.length === 0) {
+        showToast("Select at least two electrodes.");
+        return;
+      }
+
+      const hasWork = Object.values(state.drawings).some((drawing) => drawing.savedAt || drawing.completed);
+      if (hasWork && !window.confirm("Generate a new study sequence? Existing cached drawings will be replaced.")) {
+        return;
+      }
+
+      const requestedLimit = Math.max(1, Math.min(possibleCombinations.length, Number(elements.studyLimit.value) || possibleCombinations.length));
+      const handSide = document.querySelector('input[name="hand-side"]:checked').value;
+      state = {
+        version: 2,
+        config: {
+          participantId: elements.participantId.value.trim(),
+          handSide,
+          firstRole: elements.firstRole.value,
+          selectedChannels: channels,
+          limit: requestedLimit
+        },
+        combinations: possibleCombinations.slice(0, requestedLimit),
+        drawings: {},
+        currentIndex: 0,
+        complete: false,
+        updatedAt: new Date().toISOString()
+      };
+      persistState();
+      renderConfig();
+      renderWorkspace();
+      showToast(`${requestedLimit} hand${requestedLimit === 1 ? "" : "s"} generated in choose-2 order.`);
+    }
+
+    /**
+     * Navigates to a generated hand without triggering a file download.
+     *
+     * @param {number} index combination index
+     */
+    function navigateTo(index) {
+      if (index < 0 || index >= state.combinations.length) {
+        return;
+      }
+      state.currentIndex = index;
+      state.complete = false;
+      persistState();
+      renderWorkspace();
+    }
+
+    /** Saves and downloads the current SVG, then advances the study. */
+    function saveAndAdvance() {
+      if (!handRegionsReady) {
+        showToast("The anatomical hand is still being prepared.");
+        return;
+      }
+      const combination = state.combinations[state.currentIndex];
+      const drawing = getDrawing(combination);
+      drawing.completed = true;
+      drawing.savedAt = new Date().toISOString();
+      persistState();
+      downloadText(buildSvg(combination, state.currentIndex), svgFilename(combination, state.currentIndex), "image/svg+xml");
+
+      if (state.currentIndex < state.combinations.length - 1) {
+        state.currentIndex += 1;
+        state.complete = false;
+        persistState();
+        renderWorkspace();
+      } else {
+        state.complete = true;
+        persistState();
+        renderWorkspace();
+        elements.completionDownload.focus();
+      }
+    }
+
+    /**
+     * Creates a standalone true-vector SVG for one cached drawing.
+     *
+     * @param {{first: string, second: string}} combination electrode pair
+     * @param {number} index combination index
+     * @returns {string} serialized SVG document
+     */
+    function buildSvg(combination, index) {
+      const drawing = getDrawing(combination);
+      const polarity = resolvePolarity(combination, drawing);
+      const clone = elements.handSvg.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.setAttribute("width", "811");
+      clone.setAttribute("height", "1283");
+      clone.setAttribute("viewBox", "0 0 81.09 128.32");
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      clone.querySelectorAll("[tabindex]").forEach((node) => node.removeAttribute("tabindex"));
+      clone.querySelectorAll(".hand-region").forEach((region) => {
+        const fill = drawing.fills[region.dataset.region];
+        region.setAttribute("fill", fill ? fill.color : "#ffffff");
+        region.removeAttribute("style");
+        region.removeAttribute("class");
+        region.removeAttribute("aria-label");
+      });
+      prepareLineArtForStandaloneSvg(clone);
+      const metadata = document.createElementNS("http://www.w3.org/2000/svg", "metadata");
+      metadata.textContent = JSON.stringify({
+        application: "Hand percept mapper",
+        creator: "Leonardo M. Ferrisi and contributors",
+        participantId: state.config.participantId,
+        handSide: state.config.handSide,
+        order: index + 1,
+        total: state.combinations.length,
+        firstChannel: `Ch${combination.first}`,
+        secondChannel: `Ch${combination.second}`,
+        anode: `Ch${polarity.anode}`,
+        cathode: `Ch${polarity.cathode}`,
+        intensityScale: { least: 0, medium: 1, most: 2 },
+        regions: drawing.fills,
+        savedAt: drawing.savedAt
+      });
+      clone.insertBefore(metadata, clone.firstChild);
+      return `<?xml version="1.0" encoding="UTF-8"?>\n${new XMLSerializer().serializeToString(clone)}`;
+    }
+
+    /**
+     * Creates the data-oriented filename for one hand.
+     *
+     * @param {{first: string, second: string}} combination electrode pair
+     * @param {number} index combination index
+     * @returns {string} safe SVG filename
+     */
+    function svgFilename(combination, index) {
+      const drawing = getDrawing(combination);
+      const polarity = resolvePolarity(combination, drawing);
+      const participant = sanitizeFilename(state.config.participantId);
+      const participantPrefix = participant ? `${participant}_` : "";
+      const order = String(index + 1).padStart(2, "0");
+      return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_anode-Ch${polarity.anode}_cathode-Ch${polarity.cathode}.svg`;
+    }
+
+    /**
+     * Converts arbitrary text into a filename-safe token.
+     *
+     * @param {string} value input text
+     * @returns {string} filename-safe text
+     */
+    function sanitizeFilename(value) {
+      return String(value || "").trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+    }
+
+    /**
+     * Downloads text content through a temporary object URL.
+     *
+     * @param {string} content file content
+     * @param {string} filename download filename
+     * @param {string} mimeType file MIME type
+     */
+    function downloadText(content, filename, mimeType) {
+      const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+      downloadBlob(blob, filename);
+    }
+
+    /**
+     * Downloads a browser blob.
+     *
+     * @param {Blob} blob file content
+     * @param {string} filename download filename
+     */
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    /** Builds and downloads every cached hand plus manifests as a ZIP. */
+    function downloadStudyZip() {
+      const files = [];
+      const manifestRows = [["order", "pair", "anode", "cathode", "hand_side", "completed", "saved_at", "filename"]];
+      state.combinations.forEach((combination, index) => {
+        const drawing = getDrawing(combination);
+        const polarity = resolvePolarity(combination, drawing);
+        const filename = svgFilename(combination, index);
+        files.push({ name: filename, content: buildSvg(combination, index) });
+        manifestRows.push([
+          String(index + 1),
+          `Ch${combination.first}/Ch${combination.second}`,
+          `Ch${polarity.anode}`,
+          `Ch${polarity.cathode}`,
+          state.config.handSide,
+          drawing.completed ? "true" : "false",
+          drawing.savedAt || "",
+          filename
+        ]);
+      });
+
+      files.push({
+        name: "manifest.csv",
+        content: manifestRows.map((row) => row.map(csvCell).join(",")).join("\r\n")
+      });
+      files.push({
+        name: "study-config.json",
+        content: JSON.stringify({
+          application: "Hand percept mapper",
+          creator: "Leonardo M. Ferrisi and contributors",
+          exportedAt: new Date().toISOString(),
+          config: state.config,
+          completedHands: state.combinations.filter((combination) => getDrawing(combination).completed).length,
+          totalHands: state.combinations.length
+        }, null, 2)
+      });
+
+      const zip = createStoredZip(files);
+      const participant = sanitizeFilename(state.config.participantId);
+      const filename = `${participant ? `${participant}_` : ""}hand-percept-study.zip`;
+      downloadBlob(zip, filename);
+      showToast(`${files.length - 2} vector hands and 2 manifest files added to the ZIP.`);
+    }
+
+    /**
+     * Escapes one CSV field.
+     *
+     * @param {string} value cell value
+     * @returns {string} CSV-safe field
+     */
+    function csvCell(value) {
+      const text = String(value ?? "");
+      if (/[",\r\n]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    }
+
+    // --- Dependency-free ZIP writer ---
+
+    /**
+     * Creates a standards-compliant uncompressed ZIP archive.
+     *
+     * @param {{name: string, content: string}[]} files files to archive
+     * @returns {Blob} ZIP archive
+     */
+    function createStoredZip(files) {
+      const encoder = new TextEncoder();
+      const localParts = [];
+      const centralParts = [];
+      let offset = 0;
+      const timestamp = zipTimestamp(new Date());
+
+      files.forEach((file) => {
+        const name = encoder.encode(file.name);
+        const data = encoder.encode(file.content);
+        const checksum = crc32(data);
+
+        const localHeader = new Uint8Array(30 + name.length);
+        const localView = new DataView(localHeader.buffer);
+        localView.setUint32(0, 0x04034b50, true);
+        localView.setUint16(4, 20, true);
+        localView.setUint16(6, 0x0800, true);
+        localView.setUint16(8, 0, true);
+        localView.setUint16(10, timestamp.time, true);
+        localView.setUint16(12, timestamp.date, true);
+        localView.setUint32(14, checksum, true);
+        localView.setUint32(18, data.length, true);
+        localView.setUint32(22, data.length, true);
+        localView.setUint16(26, name.length, true);
+        localView.setUint16(28, 0, true);
+        localHeader.set(name, 30);
+        localParts.push(localHeader, data);
+
+        const centralHeader = new Uint8Array(46 + name.length);
+        const centralView = new DataView(centralHeader.buffer);
+        centralView.setUint32(0, 0x02014b50, true);
+        centralView.setUint16(4, 20, true);
+        centralView.setUint16(6, 20, true);
+        centralView.setUint16(8, 0x0800, true);
+        centralView.setUint16(10, 0, true);
+        centralView.setUint16(12, timestamp.time, true);
+        centralView.setUint16(14, timestamp.date, true);
+        centralView.setUint32(16, checksum, true);
+        centralView.setUint32(20, data.length, true);
+        centralView.setUint32(24, data.length, true);
+        centralView.setUint16(28, name.length, true);
+        centralView.setUint16(30, 0, true);
+        centralView.setUint16(32, 0, true);
+        centralView.setUint16(34, 0, true);
+        centralView.setUint16(36, 0, true);
+        centralView.setUint32(38, 0, true);
+        centralView.setUint32(42, offset, true);
+        centralHeader.set(name, 46);
+        centralParts.push(centralHeader);
+
+        offset += localHeader.length + data.length;
+      });
+
+      const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
+      const endRecord = new Uint8Array(22);
+      const endView = new DataView(endRecord.buffer);
+      endView.setUint32(0, 0x06054b50, true);
+      endView.setUint16(4, 0, true);
+      endView.setUint16(6, 0, true);
+      endView.setUint16(8, files.length, true);
+      endView.setUint16(10, files.length, true);
+      endView.setUint32(12, centralSize, true);
+      endView.setUint32(16, offset, true);
+      endView.setUint16(20, 0, true);
+      return new Blob([...localParts, ...centralParts, endRecord], { type: "application/zip" });
+    }
+
+    /**
+     * Converts a date to the DOS date and time fields used by ZIP.
+     *
+     * @param {Date} date timestamp
+     * @returns {{date: number, time: number}} DOS timestamp
+     */
+    function zipTimestamp(date) {
+      const year = Math.max(1980, date.getFullYear());
+      return {
+        time: (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2),
+        date: ((year - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate()
+      };
+    }
+
+    /**
+     * Computes CRC-32 for ZIP file entries.
+     *
+     * @param {Uint8Array} data file bytes
+     * @returns {number} unsigned CRC-32 checksum
+     */
+    function crc32(data) {
+      let crc = 0xffffffff;
+      for (let byteIndex = 0; byteIndex < data.length; byteIndex += 1) {
+        crc ^= data[byteIndex];
+        for (let bitIndex = 0; bitIndex < 8; bitIndex += 1) {
+          if (crc & 1) {
+            crc = (crc >>> 1) ^ 0xedb88320;
+          } else {
+            crc >>>= 1;
+          }
+        }
+      }
+      return (crc ^ 0xffffffff) >>> 0;
+    }
+
+    /**
+     * Updates the compact local-cache status.
+     *
+     * @param {string} heading primary status
+     * @param {string} detail secondary status
+     */
+    function updateAutosave(heading, detail) {
+      elements.autosaveStatus.innerHTML = `<strong>${escapeHtml(heading)}</strong><br>${escapeHtml(detail)}`;
+    }
+
+    /**
+     * Displays a brief status message.
+     *
+     * @param {string} message message text
+     */
+    function showToast(message) {
+      window.clearTimeout(toastTimer);
+      elements.toast.textContent = message;
+      elements.toast.classList.add("show");
+      toastTimer = window.setTimeout(() => elements.toast.classList.remove("show"), 3200);
+    }
+
+    /**
+     * Escapes text used in HTML status content.
+     *
+     * @param {string} value untrusted text
+     * @returns {string} escaped HTML text
+     */
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"]/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;"
+      })[character]);
+    }
+
+    /**
+     * Capitalizes a simple UI label.
+     *
+     * @param {string} value label text
+     * @returns {string} capitalized label
+     */
+    function capitalize(value) {
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    // --- Event wiring ---
+    document.querySelectorAll('#channel-grid input[type="checkbox"]').forEach((input) => {
+      input.addEventListener("change", updatePairEstimate);
+    });
+    elements.generateStudy.addEventListener("click", applyStudyConfig);
+    elements.fillTool.addEventListener("click", () => setTool("fill"));
+    elements.eraseTool.addEventListener("click", () => setTool("erase"));
+    elements.undoButton.addEventListener("click", undo);
+    elements.clearButton.addEventListener("click", clearCurrentHand);
+    elements.previousButton.addEventListener("click", () => navigateTo(state.currentIndex - 1));
+    elements.swapPolarity.addEventListener("click", swapCurrentPolarity);
+    elements.nextButton.addEventListener("click", saveAndAdvance);
+    elements.downloadAll.addEventListener("click", downloadStudyZip);
+    elements.completionDownload.addEventListener("click", downloadStudyZip);
+    elements.reviewFirst.addEventListener("click", () => navigateTo(0));
+
+    elements.intensityRail.addEventListener("pointerdown", (event) => {
+      elements.intensityRail.setPointerCapture(event.pointerId);
+      setIntensityFromPointer(event);
+    });
+    elements.intensityRail.addEventListener("pointermove", (event) => {
+      if (elements.intensityRail.hasPointerCapture(event.pointerId)) {
+        setIntensityFromPointer(event);
+      }
+    });
+    elements.intensityRail.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+        event.preventDefault();
+        setIntensity(intensity - 0.1);
+      }
+      if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+        event.preventDefault();
+        setIntensity(intensity + 0.1);
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        setIntensity(0);
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        setIntensity(2);
+      }
+    });
+
+    elements.handSvg.addEventListener("click", (event) => {
+      const region = event.target.closest(".hand-region");
+      if (region) {
+        paintRegion(region);
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const tagName = event.target.tagName;
+      if (tagName === "INPUT" || tagName === "SELECT" || tagName === "TEXTAREA") {
+        return;
+      }
+      if (event.key === "f" || event.key === "F") {
+        setTool("fill");
+      }
+      if (event.key === "e" || event.key === "E") {
+        setTool("erase");
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        undo();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        const combination = state.combinations[state.currentIndex];
+        downloadText(buildSvg(combination, state.currentIndex), svgFilename(combination, state.currentIndex), "image/svg+xml");
+      }
+    });
+
+    // --- Initial render ---
+    async function initializeApplication() {
+      renderConfig();
+      setIntensity(1);
+      setTool("fill");
+      try {
+        await initializeHandRegions();
+      } catch (error) {
+        elements.handSvg.removeAttribute("aria-busy");
+        updateAutosave("Hand unavailable", "Boundary detection failed");
+        showToast("The hand regions could not be prepared. Reload the page to try again.");
+      }
+    }
+
+    initializeApplication();
+  </script>
+</body>
+</html>

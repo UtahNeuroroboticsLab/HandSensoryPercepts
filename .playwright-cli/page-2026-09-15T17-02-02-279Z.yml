@@ -1,0 +1,363 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - complementary "Study controls" [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Neuroengineering research tool
+        - heading "Hand percept mapper" [level=1] [ref=e6]
+        - paragraph [ref=e7]: Configure stimulation pairs, record perceived regions, and export study-ready vector files.
+      - region [ref=e8]:
+        - generic [ref=e9]:
+          - heading "Study config" [level=2] [ref=e10]
+          - generic [ref=e11]: choose 2
+        - generic [ref=e12]:
+          - generic [ref=e13]: Participant or session ID
+          - textbox "Participant or session ID" [ref=e14]:
+            - /placeholder: Optional
+        - group "Hand side" [ref=e15]:
+          - generic [ref=e17]:
+            - radio "Right hand" [checked]
+            - generic [ref=e18] [cursor=pointer]: Right hand
+            - radio "Left hand"
+            - generic [ref=e19] [cursor=pointer]: Left hand
+        - group "Stim band electrodes" [ref=e20]:
+          - generic [ref=e22]:
+            - generic [ref=e23]:
+              - generic [ref=e24]:
+                - checkbox "Ch00" [checked] [ref=e25]
+                - generic [ref=e26] [cursor=pointer]: Ch00
+              - generic [ref=e27]:
+                - checkbox "Ch01" [checked] [ref=e28]
+                - generic [ref=e29] [cursor=pointer]: Ch01
+              - generic [ref=e30]:
+                - checkbox "Ch02" [ref=e31]
+                - generic [ref=e32] [cursor=pointer]: Ch02
+            - generic [ref=e33]:
+              - generic [ref=e34]:
+                - checkbox "Ch03" [checked] [ref=e35]
+                - generic [ref=e36] [cursor=pointer]: Ch03
+              - generic [ref=e37]:
+                - checkbox "Ch04" [checked] [ref=e38]
+                - generic [ref=e39] [cursor=pointer]: Ch04
+              - generic [ref=e40]:
+                - checkbox "Ch05" [checked] [ref=e41]
+                - generic [ref=e42] [cursor=pointer]: Ch05
+              - generic [ref=e43]:
+                - checkbox "Ch06" [checked] [ref=e44]
+                - generic [ref=e45] [cursor=pointer]: Ch06
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - checkbox "Ch07" [checked] [ref=e48]
+                - generic [ref=e49] [cursor=pointer]: Ch07
+              - generic [ref=e50]:
+                - checkbox "Ch08" [checked] [ref=e51]
+                - generic [ref=e52] [cursor=pointer]: Ch08
+              - generic [ref=e53]:
+                - checkbox "Ch09" [checked] [ref=e54]
+                - generic [ref=e55] [cursor=pointer]: Ch09
+          - paragraph [ref=e56]: Layout matches the provided stim band reference. Ch02 is excluded by default.
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - generic [ref=e59]: First channel
+            - combobox "First channel" [ref=e60]:
+              - option "Anode" [selected]
+              - option "Cathode"
+          - generic [ref=e61]:
+            - generic [ref=e62]: Hands in study
+            - spinbutton "Hands in study" [ref=e63]: "36"
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - strong [ref=e66]: "9"
+            - text: electrodes
+          - generic [ref=e67]:
+            - strong [ref=e68]: "36"
+            - text: possible pairs
+        - button "Generate study sequence" [ref=e69] [cursor=pointer]
+      - region [ref=e70]:
+        - generic [ref=e71]:
+          - heading "Percept intensity" [level=2] [ref=e72]
+          - generic [ref=e73]: "1.0"
+        - generic [ref=e74]:
+          - slider "Percept intensity" [ref=e76] [cursor=pointer]
+          - generic [aria-hidden] [ref=e77]:
+            - generic [ref=e78]:
+              - strong [ref=e79]: Least intense
+              - text: Bright yellow
+            - generic [ref=e80]:
+              - strong [ref=e81]: "1"
+              - text: Medium intensity
+            - generic [ref=e82]:
+              - strong [ref=e83]: Most intense
+              - text: Deep red
+        - generic [ref=e84]: Intensity 1.0
+        - generic "Painting tools" [ref=e87]:
+          - button "Fill region" [ref=e88] [cursor=pointer]
+          - button "Erase region" [ref=e89] [cursor=pointer]
+        - paragraph [ref=e90]: "Select an intensity, then click an anatomical region. Keyboard: F fill, E erase, Ctrl+Z undo."
+      - region [ref=e91]:
+        - generic [ref=e92]:
+          - heading "Study sequence" [level=2] [ref=e93]
+          - generic [ref=e94]: 0 / 36
+        - generic "Electrode combinations" [ref=e95]:
+          - button "01 Ch00 / Ch01 Not complete" [ref=e96] [cursor=pointer]:
+            - generic [ref=e97]: "01"
+            - generic [ref=e98]: Ch00 / Ch01
+            - generic "Not complete" [ref=e99]
+          - button "02 Ch00 / Ch03 Not complete" [ref=e100] [cursor=pointer]:
+            - generic [ref=e101]: "02"
+            - generic [ref=e102]: Ch00 / Ch03
+            - generic "Not complete" [ref=e103]
+          - button "03 Ch00 / Ch04 Not complete" [ref=e104] [cursor=pointer]:
+            - generic [ref=e105]: "03"
+            - generic [ref=e106]: Ch00 / Ch04
+            - generic "Not complete" [ref=e107]
+          - button "04 Ch00 / Ch05 Not complete" [ref=e108] [cursor=pointer]:
+            - generic [ref=e109]: "04"
+            - generic [ref=e110]: Ch00 / Ch05
+            - generic "Not complete" [ref=e111]
+          - button "05 Ch00 / Ch06 Not complete" [ref=e112] [cursor=pointer]:
+            - generic [ref=e113]: "05"
+            - generic [ref=e114]: Ch00 / Ch06
+            - generic "Not complete" [ref=e115]
+          - button "06 Ch00 / Ch07 Not complete" [ref=e116] [cursor=pointer]:
+            - generic [ref=e117]: "06"
+            - generic [ref=e118]: Ch00 / Ch07
+            - generic "Not complete" [ref=e119]
+          - button "07 Ch00 / Ch08 Not complete" [ref=e120] [cursor=pointer]:
+            - generic [ref=e121]: "07"
+            - generic [ref=e122]: Ch00 / Ch08
+            - generic "Not complete" [ref=e123]
+          - button "08 Ch00 / Ch09 Not complete" [ref=e124] [cursor=pointer]:
+            - generic [ref=e125]: "08"
+            - generic [ref=e126]: Ch00 / Ch09
+            - generic "Not complete" [ref=e127]
+          - button "09 Ch01 / Ch03 Not complete" [ref=e128] [cursor=pointer]:
+            - generic [ref=e129]: "09"
+            - generic [ref=e130]: Ch01 / Ch03
+            - generic "Not complete" [ref=e131]
+          - button "10 Ch01 / Ch04 Not complete" [ref=e132] [cursor=pointer]:
+            - generic [ref=e133]: "10"
+            - generic [ref=e134]: Ch01 / Ch04
+            - generic "Not complete" [ref=e135]
+          - button "11 Ch01 / Ch05 Not complete" [ref=e136] [cursor=pointer]:
+            - generic [ref=e137]: "11"
+            - generic [ref=e138]: Ch01 / Ch05
+            - generic "Not complete" [ref=e139]
+          - button "12 Ch01 / Ch06 Not complete" [ref=e140] [cursor=pointer]:
+            - generic [ref=e141]: "12"
+            - generic [ref=e142]: Ch01 / Ch06
+            - generic "Not complete" [ref=e143]
+          - button "13 Ch01 / Ch07 Not complete" [ref=e144] [cursor=pointer]:
+            - generic [ref=e145]: "13"
+            - generic [ref=e146]: Ch01 / Ch07
+            - generic "Not complete" [ref=e147]
+          - button "14 Ch01 / Ch08 Not complete" [ref=e148] [cursor=pointer]:
+            - generic [ref=e149]: "14"
+            - generic [ref=e150]: Ch01 / Ch08
+            - generic "Not complete" [ref=e151]
+          - button "15 Ch01 / Ch09 Not complete" [ref=e152] [cursor=pointer]:
+            - generic [ref=e153]: "15"
+            - generic [ref=e154]: Ch01 / Ch09
+            - generic "Not complete" [ref=e155]
+          - button "16 Ch03 / Ch04 Not complete" [ref=e156] [cursor=pointer]:
+            - generic [ref=e157]: "16"
+            - generic [ref=e158]: Ch03 / Ch04
+            - generic "Not complete" [ref=e159]
+          - button "17 Ch03 / Ch05 Not complete" [ref=e160] [cursor=pointer]:
+            - generic [ref=e161]: "17"
+            - generic [ref=e162]: Ch03 / Ch05
+            - generic "Not complete" [ref=e163]
+          - button "18 Ch03 / Ch06 Not complete" [ref=e164] [cursor=pointer]:
+            - generic [ref=e165]: "18"
+            - generic [ref=e166]: Ch03 / Ch06
+            - generic "Not complete" [ref=e167]
+          - button "19 Ch03 / Ch07 Not complete" [ref=e168] [cursor=pointer]:
+            - generic [ref=e169]: "19"
+            - generic [ref=e170]: Ch03 / Ch07
+            - generic "Not complete" [ref=e171]
+          - button "20 Ch03 / Ch08 Not complete" [ref=e172] [cursor=pointer]:
+            - generic [ref=e173]: "20"
+            - generic [ref=e174]: Ch03 / Ch08
+            - generic "Not complete" [ref=e175]
+          - button "21 Ch03 / Ch09 Not complete" [ref=e176] [cursor=pointer]:
+            - generic [ref=e177]: "21"
+            - generic [ref=e178]: Ch03 / Ch09
+            - generic "Not complete" [ref=e179]
+          - button "22 Ch04 / Ch05 Not complete" [ref=e180] [cursor=pointer]:
+            - generic [ref=e181]: "22"
+            - generic [ref=e182]: Ch04 / Ch05
+            - generic "Not complete" [ref=e183]
+          - button "23 Ch04 / Ch06 Not complete" [ref=e184] [cursor=pointer]:
+            - generic [ref=e185]: "23"
+            - generic [ref=e186]: Ch04 / Ch06
+            - generic "Not complete" [ref=e187]
+          - button "24 Ch04 / Ch07 Not complete" [ref=e188] [cursor=pointer]:
+            - generic [ref=e189]: "24"
+            - generic [ref=e190]: Ch04 / Ch07
+            - generic "Not complete" [ref=e191]
+          - button "25 Ch04 / Ch08 Not complete" [ref=e192] [cursor=pointer]:
+            - generic [ref=e193]: "25"
+            - generic [ref=e194]: Ch04 / Ch08
+            - generic "Not complete" [ref=e195]
+          - button "26 Ch04 / Ch09 Not complete" [ref=e196] [cursor=pointer]:
+            - generic [ref=e197]: "26"
+            - generic [ref=e198]: Ch04 / Ch09
+            - generic "Not complete" [ref=e199]
+          - button "27 Ch05 / Ch06 Not complete" [ref=e200] [cursor=pointer]:
+            - generic [ref=e201]: "27"
+            - generic [ref=e202]: Ch05 / Ch06
+            - generic "Not complete" [ref=e203]
+          - button "28 Ch05 / Ch07 Not complete" [ref=e204] [cursor=pointer]:
+            - generic [ref=e205]: "28"
+            - generic [ref=e206]: Ch05 / Ch07
+            - generic "Not complete" [ref=e207]
+          - button "29 Ch05 / Ch08 Not complete" [ref=e208] [cursor=pointer]:
+            - generic [ref=e209]: "29"
+            - generic [ref=e210]: Ch05 / Ch08
+            - generic "Not complete" [ref=e211]
+          - button "30 Ch05 / Ch09 Not complete" [ref=e212] [cursor=pointer]:
+            - generic [ref=e213]: "30"
+            - generic [ref=e214]: Ch05 / Ch09
+            - generic "Not complete" [ref=e215]
+          - button "31 Ch06 / Ch07 Not complete" [ref=e216] [cursor=pointer]:
+            - generic [ref=e217]: "31"
+            - generic [ref=e218]: Ch06 / Ch07
+            - generic "Not complete" [ref=e219]
+          - button "32 Ch06 / Ch08 Not complete" [ref=e220] [cursor=pointer]:
+            - generic [ref=e221]: "32"
+            - generic [ref=e222]: Ch06 / Ch08
+            - generic "Not complete" [ref=e223]
+          - button "33 Ch06 / Ch09 Not complete" [ref=e224] [cursor=pointer]:
+            - generic [ref=e225]: "33"
+            - generic [ref=e226]: Ch06 / Ch09
+            - generic "Not complete" [ref=e227]
+          - button "34 Ch07 / Ch08 Not complete" [ref=e228] [cursor=pointer]:
+            - generic [ref=e229]: "34"
+            - generic [ref=e230]: Ch07 / Ch08
+            - generic "Not complete" [ref=e231]
+          - button "35 Ch07 / Ch09 Not complete" [ref=e232] [cursor=pointer]:
+            - generic [ref=e233]: "35"
+            - generic [ref=e234]: Ch07 / Ch09
+            - generic "Not complete" [ref=e235]
+          - button "36 Ch08 / Ch09 Not complete" [ref=e236] [cursor=pointer]:
+            - generic [ref=e237]: "36"
+            - generic [ref=e238]: Ch08 / Ch09
+            - generic "Not complete" [ref=e239]
+      - generic [ref=e240]: Created for neuroengineering research by Leonardo M. Ferrisi and contributors. Drawings remain in this browser until the study is regenerated or browser data is cleared.
+    - region "Hand painting workspace" [ref=e241]:
+      - generic [ref=e242]:
+        - button "<-- Previous" [disabled] [ref=e243]
+        - generic [ref=e244]:
+          - heading "Ch00 / Ch01" [level=2] [ref=e245]
+          - paragraph [ref=e246]: Hand 01 of 36
+        - generic [ref=e247]:
+          - generic [ref=e248]:
+            - text: Anode
+            - strong [ref=e249]: Ch00
+          - generic [ref=e250]:
+            - text: Cathode
+            - strong [ref=e251]: Ch01
+          - button "Swap polarity" [ref=e252] [cursor=pointer]
+      - img "Right hand percept map for Ch00 and Ch01 The supplied anatomical vector hand with selectable percept regions." [ref=e255]:
+        - generic [ref=e257]:
+          - generic "Percept region 1" [ref=e258]
+          - generic "Percept region 2" [ref=e259]
+          - generic "Percept region 3" [ref=e260]
+          - generic "Percept region 4" [ref=e261]
+          - generic "Percept region 5" [ref=e262]
+          - generic "Percept region 6" [ref=e263]
+          - generic "Percept region 7" [ref=e264]
+          - generic "Percept region 8" [ref=e265]
+          - generic "Percept region 9" [ref=e266]
+          - generic "Percept region 10" [ref=e267]
+          - generic "Percept region 11" [ref=e268]
+          - generic "Percept region 12" [ref=e269]
+          - generic "Percept region 13" [ref=e270]
+          - generic "Percept region 14" [ref=e271]
+          - generic "Percept region 15" [ref=e272]
+          - generic "Percept region 16" [ref=e273]
+          - generic "Percept region 17" [ref=e274]
+          - generic "Percept region 18" [ref=e275]
+          - generic "Percept region 19" [ref=e276]
+          - generic "Percept region 20" [ref=e277]
+          - generic "Percept region 21" [ref=e278]
+          - generic "Percept region 22" [ref=e279]
+          - generic "Percept region 23" [ref=e280]
+          - generic "Percept region 24" [ref=e281]
+          - generic "Percept region 25" [ref=e282]
+          - generic "Percept region 26" [ref=e283]
+          - generic "Percept region 27" [ref=e284]
+          - generic "Percept region 28" [ref=e285]
+          - generic "Percept region 29" [ref=e286]
+          - generic "Percept region 30" [ref=e287]
+          - generic "Percept region 31" [ref=e288]
+          - generic "Percept region 32" [ref=e289]
+          - generic "Percept region 33" [ref=e290]
+          - generic "Percept region 34" [ref=e291]
+          - generic "Percept region 35" [ref=e292]
+          - generic "Percept region 36" [ref=e293]
+          - generic "Percept region 37" [ref=e294]
+          - generic "Percept region 38" [ref=e295]
+          - generic "Percept region 39" [ref=e296]
+          - generic "Percept region 40" [ref=e297]
+          - generic "Percept region 41" [ref=e298]
+          - generic "Percept region 42" [ref=e299]
+          - generic "Percept region 43" [ref=e300]
+          - generic "Percept region 44" [ref=e301]
+          - generic "Percept region 45" [ref=e302]
+          - generic "Percept region 46" [ref=e303]
+          - generic "Percept region 47" [ref=e304]
+          - generic "Percept region 48" [ref=e305]
+          - generic "Percept region 49" [ref=e306]
+          - generic "Percept region 50" [ref=e307]
+          - generic "Percept region 51" [ref=e308]
+          - generic "Percept region 52" [ref=e309]
+          - generic "Percept region 53" [ref=e310]
+          - generic "Percept region 54" [ref=e311]
+          - generic "Percept region 55" [ref=e312]
+          - generic "Percept region 56" [ref=e313]
+          - generic "Percept region 57" [ref=e314]
+          - generic "Percept region 58" [ref=e315]
+          - generic "Percept region 59" [ref=e316]
+          - generic "Percept region 60" [ref=e317]
+          - generic "Percept region 61" [ref=e318]
+          - generic "Percept region 62" [ref=e319]
+          - generic "Percept region 63" [ref=e320]
+          - generic "Percept region 64" [ref=e321]
+          - generic "Percept region 65" [ref=e322]
+          - generic "Percept region 66" [ref=e323]
+          - generic "Percept region 67" [ref=e324]
+          - generic "Percept region 68" [ref=e325]
+          - generic "Percept region 69" [ref=e326]
+          - generic "Percept region 70" [ref=e327]
+          - generic "Percept region 71" [ref=e328]
+          - generic "Percept region 72" [ref=e329]
+          - generic "Percept region 73" [ref=e330]
+          - generic "Percept region 74" [ref=e331]
+          - generic "Percept region 75" [ref=e332]
+          - generic "Percept region 76" [ref=e333]
+          - generic "Percept region 77" [ref=e334]
+          - generic "Percept region 78" [ref=e335]
+          - generic "Percept region 79" [ref=e336]
+          - generic "Percept region 80" [ref=e337]
+          - generic "Percept region 81" [ref=e338]
+          - generic "Percept region 82" [ref=e339]
+          - generic "Percept region 83" [ref=e340]
+          - generic "Percept region 84" [ref=e341]
+          - generic "Percept region 85" [ref=e342]
+          - generic "Percept region 86" [ref=e343]
+          - generic "Percept region 87" [ref=e344]
+          - generic "Percept region 88" [ref=e345]
+          - generic "Percept region 89" [ref=e346]
+          - generic "Percept region 90" [ref=e347]
+          - generic "Percept region 91" [ref=e348]
+      - generic [ref=e350]:
+        - generic [ref=e351]:
+          - button "Undo" [disabled] [ref=e352]
+          - button "Clear hand" [ref=e353] [cursor=pointer]
+        - generic [ref=e354]:
+          - strong [ref=e355]: Cached locally
+          - text: Current hand is ready
+        - generic [ref=e356]:
+          - button "Download cached ZIP" [ref=e357] [cursor=pointer]
+          - button "Save SVG + next -->" [ref=e358] [cursor=pointer]
+  - status
