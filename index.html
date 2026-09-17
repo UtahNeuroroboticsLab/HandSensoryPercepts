@@ -919,7 +919,7 @@
             <input class="number-input" id="study-limit" type="number" min="1" max="72" value="72">
           </div>
           <div class="field reference-field">
-            <label class="field-label" for="reference-interval">Reference every N pairs</label>
+            <label class="field-label" for="reference-interval">Reference before every N pairs</label>
             <input class="number-input" id="reference-interval" type="number" min="0" step="1" value="10" aria-describedby="reference-help">
             <p class="field-help" id="reference-help">Use 0 to disable reference hands.</p>
           </div>
@@ -928,7 +928,7 @@
         <div class="study-summary" aria-live="polite">
           <div class="summary-stat"><strong id="selected-count">9</strong><span>electrodes</span></div>
           <div class="summary-stat"><strong id="pair-count">72</strong><span>directed pairs</span></div>
-          <div class="summary-stat"><strong id="study-item-count">79</strong><span>total hands</span></div>
+          <div class="summary-stat"><strong id="study-item-count">80</strong><span>total hands</span></div>
         </div>
 
         <button class="button button-primary button-full" id="generate-study" type="button">Generate study sequence</button>
@@ -968,7 +968,7 @@
       <section class="sidebar-section" aria-labelledby="sequence-heading">
         <div class="section-heading">
           <h2 id="sequence-heading">Study sequence</h2>
-          <span id="sequence-progress">0 / 79</span>
+          <span id="sequence-progress">0 / 80</span>
         </div>
         <div class="sequence-list" id="sequence-list" aria-label="Study items"></div>
       </section>
@@ -982,8 +982,8 @@
       <header class="workspace-header">
         <button class="button" id="previous-button" type="button">&lt;-- Previous</button>
         <div class="pair-heading">
-          <h2 id="pair-title">Ch00 --&gt; Ch01</h2>
-          <p id="pair-position">Hand 01 of 79</p>
+          <h2 id="pair-title">REF_01</h2>
+          <p id="pair-position">Hand 01 of 80</p>
         </div>
         <div class="polarity-group" id="polarity-group">
           <span class="polarity-badge">Anode <strong id="anode-channel">Ch00</strong></span>
@@ -1610,7 +1610,7 @@
     }
 
     /**
-     * Inserts a numbered reference hand after each complete pair interval.
+     * Starts each pair interval with a numbered reference hand.
      *
      * @param {{kind: string, first: string, second: string}[]} pairs directed pairs
      * @param {number} interval number of stimulus pairs between references
@@ -1620,15 +1620,14 @@
       const sequence = [];
       let referenceNumber = 0;
       pairs.forEach((pair, index) => {
-        sequence.push(pair);
-        const completedPairCount = index + 1;
-        if (interval > 0 && completedPairCount % interval === 0) {
+        if (interval > 0 && index % interval === 0) {
           referenceNumber += 1;
           sequence.push({
             kind: "reference",
             referenceNumber
           });
         }
+        sequence.push(pair);
       });
       return sequence;
     }
@@ -1679,6 +1678,20 @@
       try {
         const cached = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (cached && cached.version === 5 && Array.isArray(cached.combinations) && cached.combinations.length > 0) {
+          const currentItem = cached.combinations[cached.currentIndex];
+          let currentKey = null;
+          if (currentItem) {
+            currentKey = combinationKey(currentItem);
+          }
+          const pairs = cached.combinations.filter((item) => !isReferenceItem(item));
+          cached.combinations = buildStudySequence(pairs, cached.config.referenceInterval);
+          const migratedIndex = cached.combinations.findIndex((item) => combinationKey(item) === currentKey);
+          if (migratedIndex >= 0) {
+            cached.currentIndex = migratedIndex;
+          } else {
+            cached.currentIndex = 0;
+          }
+          cached.complete = cached.combinations.every((item) => cached.drawings?.[combinationKey(item)]?.completed === true);
           return cached;
         }
       } catch (error) {
@@ -2027,7 +2040,7 @@
       const referenceInterval = readReferenceInterval();
       let referenceCount = 0;
       if (referenceInterval > 0) {
-        referenceCount = Math.floor(selectedPairCount / referenceInterval);
+        referenceCount = Math.ceil(selectedPairCount / referenceInterval);
       }
       elements.studyItemCount.textContent = selectedPairCount + referenceCount;
       elements.generateStudy.disabled = count < 1;
