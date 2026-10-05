@@ -7,18 +7,19 @@ For each electrode combination SVG, extracts:
   2. A dict of all 91 regions with their fill colors and anatomical labels
 
 Region labeling follows the convention:
-  T1-T8   = Thumb
-  I1-I12  = Index finger
-  M1-M12  = Middle finger
-  R1-R12  = Ring finger
-  K1-K12  = Pinky (K to avoid collision with Palm P)
-  P1-P16  = Palm
-  W1-W11  = Wrist
+  T1-T8   = Thumb (8 regions)
+  I1-I10  = Index finger (10 regions)
+  M1-M10  = Middle finger (10 regions)
+  R1-R10  = Ring finger (10 regions)
+  K1-K8   = Pinky (8 regions; K to avoid collision with Palm P)
+  P1-P28  = Palm (27 labeled regions; P6/P7 share one SVG region)
+  W1-W16  = Wrist (16 regions)
 
-NOTE: The region-to-label mapping must be defined per hand side (left/right).
-      A default mapping is provided based on typical region ordering from the
-      flood-fill algorithm. You should verify/adjust it by visual inspection
-      of one REF SVG per hand side.
+The default mapping was built from ground truth pixel coordinates
+(regions.jsonc) by rendering the SVG template and sampling which
+data-region each labeled coordinate falls within. Of the 91 SVG regions,
+89 are labeled, 1 is background (region-050), and 1 is an unlabeled
+palm subregion (region-066).
 
 Usage:
     python analyze_percepts.py <patient_dir> [--output results.json]
@@ -153,15 +154,69 @@ def load_manifest(manifest_path: str) -> list:
 # For now, we output region IDs as-is (region-001 through region-091)
 # and provide a stub mapping that you fill in after visual verification.
 
+DEFAULT_LABEL_MAP = {
+    # Built from ground truth pixel coordinates in regions.jsonc
+    # by rendering the SVG and sampling which region each labeled
+    # pixel coordinate falls within.
+    #
+    # Zones: T=8(Thumb), I=10(Index), M=10(Middle), R=10(Ring),
+    #        K=8(Pinky), P=27(Palm), W=16(Wrist) = 89 labeled
+    # region-050 = background/outline (unlabeled)
+    # region-066 = small palm subregion (unlabeled)
+    # P6 and P7 from ground truth both fall within region-067;
+    #   P6 is kept, P7 is an alias for the same region.
+    "region-001": "M1",  "region-002": "M2",  "region-003": "R1",
+    "region-004": "M3",  "region-005": "R2",  "region-006": "M4",
+    "region-007": "I2",  "region-008": "I1",  "region-009": "R3",
+    "region-010": "R4",  "region-011": "I4",  "region-012": "M5",
+    "region-013": "M6",  "region-014": "I3",  "region-015": "R5",
+    "region-016": "R6",  "region-017": "I6",  "region-018": "M7",
+    "region-019": "M8",  "region-020": "I5",  "region-021": "R7",
+    "region-022": "K1",  "region-023": "K2",  "region-024": "R8",
+    "region-025": "I8",  "region-026": "K3",  "region-027": "P15",
+    "region-028": "K4",  "region-029": "I7",  "region-030": "M9",
+    "region-031": "M10", "region-032": "R9",  "region-033": "K5",
+    "region-034": "I10", "region-035": "R10", "region-036": "K6",
+    "region-037": "I9",  "region-038": "P26", "region-039": "P25",
+    "region-040": "P27", "region-041": "K7",  "region-042": "K8",
+    "region-043": "P28", "region-044": "P22", "region-045": "P21",
+    "region-046": "P23", "region-047": "T2",  "region-048": "T1",
+    "region-049": "T4",  "region-051": "T6",  "region-052": "T3",
+    "region-053": "P24", "region-054": "P17", "region-055": "P16",
+    "region-056": "P18", "region-057": "T5",  "region-058": "T8",
+    "region-059": "P19", "region-060": "T7",  "region-061": "P12",
+    "region-062": "P13", "region-063": "P20", "region-064": "P11",
+    "region-065": "P14", "region-067": "P6",  "region-068": "P5",
+    "region-069": "P8",  "region-070": "P9",  "region-071": "P10",
+    "region-072": "P1",  "region-073": "P2",  "region-074": "P3",
+    "region-075": "P4",  "region-076": "W13", "region-077": "W15",
+    "region-078": "W14", "region-079": "W16", "region-080": "W9",
+    "region-081": "W10", "region-082": "W11", "region-083": "W12",
+    "region-084": "W5",  "region-085": "W7",  "region-086": "W6",
+    "region-087": "W8",  "region-088": "W1",  "region-089": "W2",
+    "region-090": "W3",  "region-091": "W4",
+}
+# Numbering: 1 = most distal (fingertip), ascending toward proximal
+
+
 def get_default_label_map() -> dict:
     """
     Return a dict mapping region-XXX to anatomical labels.
 
-    This returns a placeholder identity mapping. Replace with the real
-    mapping after visual verification of one reference SVG.
+    Uses the built-in mapping derived from centroid spatial analysis
+    of the HandSensoryPercepts SVG template. Also checks for a
+    region_labels.json file next to this script as an override.
+
+    Label prefixes:
+      T = Thumb, I = Index, M = Middle, R = Ring, K = Pinky,
+      P = Palm, W = Wrist
     """
-    # Placeholder: just use region numbers
-    return {f"region-{i:03d}": f"region-{i:03d}" for i in range(1, 92)}
+    # Check for a JSON override next to this script
+    script_dir = Path(__file__).parent
+    override = script_dir / "region_labels.json"
+    if override.exists():
+        return load_label_map(str(override))
+    return dict(DEFAULT_LABEL_MAP)
 
 
 def load_label_map(path: str) -> dict:
@@ -197,8 +252,8 @@ def analyze_patient(patient_dir: str, label_map: dict = None) -> dict:
                     "sensation_detected": true,
                     "num_active_regions": 5,
                     "regions": {
-                        "T1": {"color": "#ffffff", "active": false},
-                        "T2": {"color": "#ffe600", "active": true},
+                        "T1": {"region_id": "region-048", "color": "#ffffff", "active": false},
+                        "T2": {"region_id": "region-047", "color": "#ffe600", "active": true},
                         ...
                     }
                 },
@@ -275,6 +330,7 @@ def analyze_patient(patient_dir: str, label_map: dict = None) -> dict:
         for region_id, color in sorted(raw_regions.items()):
             label = label_map.get(region_id, region_id)
             labeled_regions[label] = {
+                "region_id": region_id,
                 "color": color,
                 "active": color not in WHITE_COLORS,
             }
