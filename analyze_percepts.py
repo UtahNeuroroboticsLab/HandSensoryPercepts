@@ -85,8 +85,10 @@ def non_white_regions(regions: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 FILENAME_PATTERN = re.compile(
-    r"(\d+)_hand_(\d+)_of_(\d+)_(left|right)_"
-    r"(?:REF_(\d+)|anode-(Ch\d+)_cathode-(Ch\d+))"
+    r"(?P<patient>\d+)_hand_(?P<hand>\d+)_of_(?P<total>\d+)_(?P<side>left|right)_"
+    r"(?:REF_(?P<reference>\d+)|"
+    r"anode-(?P<anode>Ch\d+)_cathode-(?P<cathode>Ch\d+)|"
+    r"anodes-(?P<first_anode>Ch\d+)\+(?P<second_anode>Ch\d+)_cathode-(?P<triplet_cathode>Ch\d+))"
     r"\.svg$"
 )
 
@@ -101,26 +103,39 @@ def parse_filename(filename: str) -> dict:
         ref_number (if reference), anode, cathode (if stimulus),
         title (human-readable label)
     """
-    m = FILENAME_PATTERN.match(filename)
-    if not m:
+    match = FILENAME_PATTERN.match(filename)
+    if not match:
         return {"filename": filename, "parse_error": True}
 
+    groups = match.groupdict()
     info = {
-        "patient_id": m.group(1),
-        "hand_number": int(m.group(2)),
-        "total_hands": int(m.group(3)),
-        "hand_side": m.group(4),
+        "patient_id": groups["patient"],
+        "hand_number": int(groups["hand"]),
+        "total_hands": int(groups["total"]),
+        "hand_side": groups["side"],
     }
 
-    if m.group(5):  # REF
+    if groups["reference"]:
         info["item_type"] = "reference"
-        info["ref_number"] = int(m.group(5))
-        info["title"] = f"REF_{m.group(5).zfill(2)}"
+        info["ref_number"] = int(groups["reference"])
+        info["title"] = f"REF_{groups['reference'].zfill(2)}"
+    elif groups["first_anode"]:
+        info["item_type"] = "stimulus"
+        info["anode"] = groups["first_anode"]
+        info["second_anode"] = groups["second_anode"]
+        info["anodes"] = [groups["first_anode"], groups["second_anode"]]
+        info["cathode"] = groups["triplet_cathode"]
+        info["title"] = (
+            f"{groups['first_anode']} + {groups['second_anode']}"
+            f"-->{groups['triplet_cathode']}"
+        )
     else:
         info["item_type"] = "stimulus"
-        info["anode"] = m.group(6)
-        info["cathode"] = m.group(7)
-        info["title"] = f"{m.group(6)}-->{m.group(7)}"
+        info["anode"] = groups["anode"]
+        info["second_anode"] = ""
+        info["anodes"] = [groups["anode"]]
+        info["cathode"] = groups["cathode"]
+        info["title"] = f"{groups['anode']}-->{groups['cathode']}"
 
     return info
 
@@ -311,6 +326,7 @@ def analyze_patient(patient_dir: str, label_map: dict = None) -> dict:
                 "item_type": meta.get("item_type", "unknown"),
                 "hand_side": meta.get("hand_side", ""),
                 "anode": meta.get("anode", ""),
+                "second_anode": meta.get("second_anode", ""),
                 "cathode": meta.get("cathode", ""),
             }
         else:
@@ -346,6 +362,10 @@ def analyze_patient(patient_dir: str, label_map: dict = None) -> dict:
 
         if info.get("item_type") == "stimulus":
             entry["anode"] = info.get("anode", "")
+            entry["second_anode"] = info.get("second_anode", "")
+            entry["anodes"] = [
+                anode for anode in (entry["anode"], entry["second_anode"]) if anode
+            ]
             entry["cathode"] = info.get("cathode", "")
             stim_count += 1
             if sensation:

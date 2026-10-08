@@ -865,7 +865,7 @@
       <section class="sidebar-section" aria-labelledby="config-heading">
         <div class="section-heading">
           <h2 id="config-heading">Study config</h2>
-          <span>directed pairs</span>
+          <span id="pairing-count-heading">directed pairs</span>
         </div>
 
         <div class="field">
@@ -884,12 +884,33 @@
         </fieldset>
 
         <fieldset class="field" style="border: 0; padding: 0; margin-inline: 0;">
+          <legend class="field-label">Choose-2 or Choose-3</legend>
+          <div class="segmented-control">
+            <input id="choose-2" name="choose-type" type="radio" value="choose-2" checked>
+            <label for="choose-2">Choose-2</label>
+            <input id="choose-3" name="choose-type" type="radio" value="choose-3">
+            <label for="choose-3">Choose-3</label>
+          </div>
+        </fieldset>
+
+        <fieldset class="field" style="border: 0; padding: 0; margin-inline: 0;">
+          <legend class="field-label">Combination sweep</legend>
+          <div class="segmented-control">
+            <input id="sweep-full" name="sweep-mode" type="radio" value="full" checked>
+            <label for="sweep-full">Full sweep</label>
+            <input id="sweep-unique" name="sweep-mode" type="radio" value="unique">
+            <label for="sweep-unique">Unique only</label>
+          </div>
+          <p class="field-help">Unique only uses one polarity assignment for each channel set.</p>
+        </fieldset>
+
+        <fieldset class="field" style="border: 0; padding: 0; margin-inline: 0;">
           <legend class="field-label">Stim band electrodes</legend>
           <div class="band-map" id="channel-grid" aria-describedby="channel-help">
             <div class="band-row band-row-three">
               <div class="channel-toggle"><input id="channel-00" type="checkbox" value="00" checked><label for="channel-00">Ch00</label></div>
               <div class="channel-toggle"><input id="channel-01" type="checkbox" value="01" checked><label for="channel-01">Ch01</label></div>
-              <div class="channel-toggle"><input id="channel-02" type="checkbox" value="02"><label for="channel-02">Ch02</label></div>
+              <div class="channel-toggle"><input id="channel-02" type="checkbox" value="02" checked><label for="channel-02">Ch02</label></div>
             </div>
             <div class="band-row band-row-four">
               <div class="channel-toggle"><input id="channel-03" type="checkbox" value="03" checked><label for="channel-03">Ch03</label></div>
@@ -902,12 +923,22 @@
               <div class="channel-toggle"><input id="channel-08" type="checkbox" value="08" checked><label for="channel-08">Ch08</label></div>
               <div class="channel-toggle"><input id="channel-09" type="checkbox" value="09" checked><label for="channel-09">Ch09</label></div>
             </div>
+            <div class="band-row band-row-three">
+              <div class="channel-toggle"><input id="channel-10" type="checkbox" value="10" checked><label for="channel-10">Ch10</label></div>
+              <div class="channel-toggle"><input id="channel-11" type="checkbox" value="11" checked><label for="channel-11">Ch11</label></div>
+              <div class="channel-toggle"><input id="channel-12" type="checkbox" value="12" checked><label for="channel-12">Ch12</label></div>
+            </div>
+            <div class="band-row band-row-three">
+              <div class="channel-toggle"><input id="channel-13" type="checkbox" value="13" checked><label for="channel-13">Ch13</label></div>
+              <div class="channel-toggle"><input id="channel-14" type="checkbox" value="14" checked><label for="channel-14">Ch14</label></div>
+              <div class="channel-toggle"><input id="channel-15" type="checkbox" value="15" checked><label for="channel-15">Ch15</label></div>
+            </div>
           </div>
           <p class="field-help" id="channel-help">Layout matches the provided stim band reference. Ch02 is excluded by default.</p>
         </fieldset>
 
         <div class="config-grid">
-          <div class="field">
+          <div class="field" id="first-role-field">
             <label class="field-label" for="first-role">First channel role</label>
             <select class="select-input" id="first-role">
               <option value="anode">Anode</option>
@@ -915,11 +946,11 @@
             </select>
           </div>
           <div class="field">
-            <label class="field-label" for="study-limit">Stim pairs in study</label>
+            <label class="field-label" id="study-limit-label" for="study-limit">Stim pairs in study</label>
             <input class="number-input" id="study-limit" type="number" min="1" max="72" value="72">
           </div>
           <div class="field reference-field">
-            <label class="field-label" for="reference-interval">Reference before every N pairs</label>
+            <label class="field-label" id="reference-interval-label" for="reference-interval">Reference before every N pairs</label>
             <input class="number-input" id="reference-interval" type="number" min="0" step="1" value="10" aria-describedby="reference-help">
             <p class="field-help" id="reference-help">Use 0 to disable reference hands.</p>
           </div>
@@ -927,7 +958,7 @@
 
         <div class="study-summary" aria-live="polite">
           <div class="summary-stat"><strong id="selected-count">9</strong><span>electrodes</span></div>
-          <div class="summary-stat"><strong id="pair-count">72</strong><span>directed pairs</span></div>
+          <div class="summary-stat"><strong id="pair-count">72</strong><span id="pair-count-label">directed pairs</span></div>
           <div class="summary-stat"><strong id="study-item-count">80</strong><span>total hands</span></div>
         </div>
 
@@ -1102,8 +1133,8 @@
 
   <script>
     // --- Study constants ---
-    const CHANNEL_ORDER = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09"];
-    const DEFAULT_CHANNELS = ["00", "01", "03", "04", "05", "06", "07", "08", "09"];
+    const CHANNEL_ORDER = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"];
+    const DEFAULT_CHANNELS = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"];
     const STORAGE_KEY = "hand-percept-mapper-study-v5";
     const DEFAULT_REFERENCE_INTERVAL = 10;
     const MAX_UNDO = 30;
@@ -1111,10 +1142,19 @@
     const elements = {
       participantId: document.getElementById("participant-id"),
       firstRole: document.getElementById("first-role"),
+      firstRoleField: document.getElementById("first-role-field"),
+      chooseTwo: document.getElementById("choose-2"),
+      chooseThree: document.getElementById("choose-3"),
+      sweepFull: document.getElementById("sweep-full"),
+      sweepUnique: document.getElementById("sweep-unique"),
+      pairingCountHeading: document.getElementById("pairing-count-heading"),
+      studyLimitLabel: document.getElementById("study-limit-label"),
+      referenceIntervalLabel: document.getElementById("reference-interval-label"),
       studyLimit: document.getElementById("study-limit"),
       referenceInterval: document.getElementById("reference-interval"),
       selectedCount: document.getElementById("selected-count"),
       pairCount: document.getElementById("pair-count"),
+      pairCountLabel: document.getElementById("pair-count-label"),
       studyItemCount: document.getElementById("study-item-count"),
       generateStudy: document.getElementById("generate-study"),
       intensityRail: document.getElementById("intensity-rail"),
@@ -1590,20 +1630,59 @@
      * Generates directed channel pairs in the supplied channel order.
      *
      * @param {string[]} channels selected stim band channels
-     * @returns {{first: string, second: string}[]} directed pairs
+     * @param {boolean} uniqueOnly include one orientation per channel pair
+     * @returns {{kind: string, first: string, second: string}[]} channel pairs
      */
-    function generateCombinations(channels) {
+    function generateCombinations(channels, uniqueOnly = false) {
       const combinations = [];
       for (let firstIndex = 0; firstIndex < channels.length; firstIndex += 1) {
-        for (let secondIndex = 0; secondIndex < channels.length; secondIndex += 1) {
-          if (firstIndex === secondIndex) {
-            continue;
-          }
+        const secondStart = uniqueOnly ? firstIndex + 1 : 0;
+        for (let secondIndex = secondStart; secondIndex < channels.length; secondIndex += 1) {
+          if (firstIndex === secondIndex) continue;
           combinations.push({
             kind: "pair",
             first: channels[firstIndex],
             second: channels[secondIndex]
           });
+        }
+      }
+      return combinations;
+    }
+
+    /**
+     * Generates one-cathode, two-anode combinations in channel order.
+     *
+     * @param {string[]} channels selected stim band channels
+     * @param {boolean} uniqueOnly use one role assignment per three-channel set
+     * @returns {{kind: string, anodes: string[], cathode: string}[]} choose-3 combinations
+     */
+    function generateChooseThreeCombinations(channels, uniqueOnly = false) {
+      const combinations = [];
+      if (uniqueOnly) {
+        for (let cathodeIndex = 0; cathodeIndex < channels.length - 2; cathodeIndex += 1) {
+          for (let firstAnodeIndex = cathodeIndex + 1; firstAnodeIndex < channels.length - 1; firstAnodeIndex += 1) {
+            for (let secondAnodeIndex = firstAnodeIndex + 1; secondAnodeIndex < channels.length; secondAnodeIndex += 1) {
+              combinations.push({
+                kind: "triplet",
+                anodes: [channels[firstAnodeIndex], channels[secondAnodeIndex]],
+                cathode: channels[cathodeIndex]
+              });
+            }
+          }
+        }
+        return combinations;
+      }
+
+      for (const cathode of channels) {
+        const anodeCandidates = channels.filter((channel) => channel !== cathode);
+        for (let firstAnodeIndex = 0; firstAnodeIndex < anodeCandidates.length; firstAnodeIndex += 1) {
+          for (let secondAnodeIndex = firstAnodeIndex + 1; secondAnodeIndex < anodeCandidates.length; secondAnodeIndex += 1) {
+            combinations.push({
+              kind: "triplet",
+              anodes: [anodeCandidates[firstAnodeIndex], anodeCandidates[secondAnodeIndex]],
+              cathode
+            });
+          }
         }
       }
       return combinations;
@@ -1656,7 +1735,8 @@
           participantId: "",
           handSide: "right",
           firstRole: "anode",
-          pairingMode: "directed",
+          pairingMode: "choose-2",
+          sweepMode: "full",
           referenceInterval: DEFAULT_REFERENCE_INTERVAL,
           selectedChannels: [...DEFAULT_CHANNELS],
           limit: pairs.length
@@ -1678,6 +1758,8 @@
       try {
         const cached = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (cached && cached.version === 5 && Array.isArray(cached.combinations) && cached.combinations.length > 0) {
+          cached.config.pairingMode = cached.config.pairingMode === "choose-3" ? "choose-3" : "choose-2";
+          cached.config.sweepMode = cached.config.sweepMode === "unique" ? "unique" : "full";
           const currentItem = cached.combinations[cached.currentIndex];
           let currentKey = null;
           if (currentItem) {
@@ -1722,7 +1804,18 @@
       if (isReferenceItem(combination)) {
         return `reference-${String(combination.referenceNumber).padStart(2, "0")}`;
       }
+      if (combination.kind === "triplet") {
+        return `triplet-${combination.anodes.join("-")}-cathode-${combination.cathode}`;
+      }
       return `${combination.first}-${combination.second}`;
+    }
+
+    /** Returns the visible channel sequence for a stimulus item. */
+    function combinationTitle(combination) {
+      if (combination.kind === "triplet") {
+        return `Ch${combination.anodes[0]} + Ch${combination.anodes[1]} --> Ch${combination.cathode}`;
+      }
+      return `Ch${combination.first} --> Ch${combination.second}`;
     }
 
     /**
@@ -1896,26 +1989,29 @@
     }
 
     /**
-     * Resolves anode and cathode for a pair, including per-hand swaps.
+     * Resolves anode and cathode channels, including pair-only per-hand swaps.
      *
-     * @param {{first: string, second: string}} combination electrode pair
+     * @param {object} combination stimulus combination
      * @param {object} drawing cached drawing
-     * @returns {{anode: string, cathode: string}} resolved polarity
+     * @returns {{anodes: string[], cathode: string}} resolved roles
      */
     function resolvePolarity(combination, drawing) {
+      if (combination.kind === "triplet") {
+        return { anodes: combination.anodes, cathode: combination.cathode };
+      }
       const firstIsAnode = state.config.firstRole === "anode";
       const baseAnode = firstIsAnode ? combination.first : combination.second;
       const baseCathode = firstIsAnode ? combination.second : combination.first;
       if (drawing.polaritySwapped) {
-        return { anode: baseCathode, cathode: baseAnode };
+        return { anodes: [baseCathode], cathode: baseAnode };
       }
-      return { anode: baseAnode, cathode: baseCathode };
+      return { anodes: [baseAnode], cathode: baseCathode };
     }
 
     /** Swaps anode and cathode for only the current hand. */
     function swapCurrentPolarity() {
       const combination = state.combinations[state.currentIndex];
-      if (isReferenceItem(combination)) {
+      if (isReferenceItem(combination) || combination.kind === "triplet" || state.config.sweepMode === "unique") {
         return;
       }
       const drawing = getDrawing(combination);
@@ -1933,7 +2029,7 @@
         const fill = drawing.fills[region.dataset.region];
         region.style.fill = fill ? fill.color : "#ffffff";
       });
-      if (state.config.handSide === "left") {
+      if (state.config.handSide === "right") {
         elements.handTransform.setAttribute("transform", "translate(81.09 0) scale(-1 1)");
       } else {
         elements.handTransform.removeAttribute("transform");
@@ -1941,7 +2037,7 @@
       if (isReferenceItem(combination)) {
         elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} reference hand percept map ${referenceTitle(combination)}`;
       } else {
-        elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} hand percept map for Ch${combination.first} and Ch${combination.second}`;
+        elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} hand percept map for ${combinationTitle(combination)}`;
       }
     }
 
@@ -1959,10 +2055,13 @@
         elements.polarityGroup.hidden = true;
       } else {
         const polarity = resolvePolarity(combination, drawing);
-        elements.pairTitle.textContent = `Ch${combination.first} --> Ch${combination.second}`;
-        elements.anodeChannel.textContent = `Ch${polarity.anode}`;
+        elements.pairTitle.textContent = combinationTitle(combination);
+        elements.anodeChannel.textContent = polarity.anodes.map((channel) => `Ch${channel}`).join(" + ");
         elements.cathodeChannel.textContent = `Ch${polarity.cathode}`;
         elements.polarityGroup.hidden = false;
+        const polaritySwapUnavailable = combination.kind === "triplet" || state.config.sweepMode === "unique";
+        elements.swapPolarity.hidden = polaritySwapUnavailable;
+        elements.swapPolarity.disabled = polaritySwapUnavailable;
       }
       elements.pairPosition.textContent = `Hand ${position} of ${total}`;
       elements.previousButton.disabled = state.currentIndex === 0;
@@ -1977,7 +2076,7 @@
       updateAutosave("Cached locally", drawing.savedAt ? "Current hand restored" : "Current hand is ready");
     }
 
-    /** Renders a selectable index of every generated pair. */
+    /** Renders a selectable index of every generated stimulus item. */
     function renderSequence() {
       elements.sequenceList.replaceChildren();
       const orderDigits = Math.max(2, String(state.combinations.length).length);
@@ -1998,7 +2097,7 @@
           itemTitle = referenceTitle(combination);
           button.classList.add("reference");
         } else {
-          itemTitle = `Ch${combination.first} --> Ch${combination.second}`;
+          itemTitle = combinationTitle(combination);
         }
         button.innerHTML = `<span class="sequence-number">${String(index + 1).padStart(orderDigits, "0")}</span><span class="sequence-pair">${itemTitle}</span><span class="sequence-state" aria-label="${drawing.completed ? "Complete" : "Not complete"}"></span>`;
         button.addEventListener("click", () => navigateTo(index));
@@ -2014,6 +2113,10 @@
     function renderConfig() {
       elements.participantId.value = state.config.participantId || "";
       elements.firstRole.value = state.config.firstRole;
+      elements.chooseTwo.checked = state.config.pairingMode !== "choose-3";
+      elements.chooseThree.checked = state.config.pairingMode === "choose-3";
+      elements.sweepFull.checked = state.config.sweepMode !== "unique";
+      elements.sweepUnique.checked = state.config.sweepMode === "unique";
       elements.studyLimit.value = state.config.limit;
       elements.referenceInterval.value = state.config.referenceInterval;
       document.querySelector(`input[name="hand-side"][value="${state.config.handSide}"]`).checked = true;
@@ -2023,15 +2126,36 @@
       updatePairEstimate();
     }
 
-    /** Updates the pending electrode and pair counts. */
+    /** Updates the pending electrode and combination counts. */
     function updatePairEstimate() {
       const channels = readSelectedChannels();
-      const count = channels.length * (channels.length - 1);
+      const chooseThree = elements.chooseThree.checked;
+      const uniqueOnly = elements.sweepUnique.checked;
+      const minimumChannels = chooseThree ? 3 : 2;
+      const count = chooseThree
+        ? uniqueOnly
+          ? channels.length * (channels.length - 1) * (channels.length - 2) / 6
+          : channels.length * (channels.length - 1) * (channels.length - 2) / 2
+        : uniqueOnly
+          ? channels.length * (channels.length - 1) / 2
+          : channels.length * (channels.length - 1);
+      const combinationLabel = chooseThree
+        ? uniqueOnly ? "unique triplets" : "stimulus combinations"
+        : uniqueOnly ? "unique pairs" : "directed pairs";
       const previousMaximum = Number(elements.studyLimit.max);
       const currentLimit = Number(elements.studyLimit.value);
       const limitWasPreviousMaximum = currentLimit === previousMaximum;
+      elements.firstRoleField.hidden = chooseThree;
       elements.selectedCount.textContent = channels.length;
       elements.pairCount.textContent = count;
+      elements.pairingCountHeading.textContent = combinationLabel;
+      elements.studyLimitLabel.textContent = chooseThree
+        ? uniqueOnly ? "Unique triplets in study" : "Stim combinations in study"
+        : uniqueOnly ? "Unique pairs in study" : "Stim pairs in study";
+      elements.referenceIntervalLabel.textContent = chooseThree
+        ? `Reference before every N ${uniqueOnly ? "triplets" : "combinations"}`
+        : `Reference before every N ${uniqueOnly ? "unique pairs" : "pairs"}`;
+      elements.pairCountLabel.textContent = combinationLabel;
       elements.studyLimit.max = Math.max(1, count);
       if (limitWasPreviousMaximum || !Number.isFinite(currentLimit) || currentLimit > count || currentLimit < 1) {
         elements.studyLimit.value = Math.max(1, count);
@@ -2043,7 +2167,7 @@
         referenceCount = Math.ceil(selectedPairCount / referenceInterval);
       }
       elements.studyItemCount.textContent = selectedPairCount + referenceCount;
-      elements.generateStudy.disabled = count < 1;
+      elements.generateStudy.disabled = channels.length < minimumChannels;
     }
 
     /** Returns the normalized reference interval, where zero disables references. */
@@ -2067,11 +2191,16 @@
     /** Rebuilds the study from the current sidebar configuration. */
     function applyStudyConfig() {
       const channels = readSelectedChannels();
-      const possibleCombinations = generateCombinations(channels);
-      if (possibleCombinations.length === 0) {
-        showToast("Select at least two electrodes.");
+      const chooseThree = elements.chooseThree.checked;
+      const uniqueOnly = elements.sweepUnique.checked;
+      const minimumChannels = chooseThree ? 3 : 2;
+      if (channels.length < minimumChannels) {
+        showToast(`Select at least ${minimumChannels} electrodes for Choose-${chooseThree ? 3 : 2}.`);
         return;
       }
+      const possibleCombinations = chooseThree
+        ? generateChooseThreeCombinations(channels, uniqueOnly)
+        : generateCombinations(channels, uniqueOnly);
 
       const hasWork = Object.values(state.drawings).some((drawing) => drawing.savedAt || drawing.completed);
       if (hasWork && !window.confirm("Generate a new study sequence? Existing cached drawings will be replaced.")) {
@@ -2080,8 +2209,8 @@
 
       const requestedLimit = Math.max(1, Math.min(possibleCombinations.length, Number(elements.studyLimit.value) || possibleCombinations.length));
       const referenceInterval = readReferenceInterval();
-      const requestedPairs = possibleCombinations.slice(0, requestedLimit);
-      const studyItems = buildStudySequence(requestedPairs, referenceInterval);
+      const requestedCombinations = possibleCombinations.slice(0, requestedLimit);
+      const studyItems = buildStudySequence(requestedCombinations, referenceInterval);
       const handSide = document.querySelector('input[name="hand-side"]:checked').value;
       state = {
         version: 5,
@@ -2089,7 +2218,8 @@
           participantId: elements.participantId.value.trim(),
           handSide,
           firstRole: elements.firstRole.value,
-          pairingMode: "directed",
+          pairingMode: elements.chooseThree.checked ? "choose-3" : "choose-2",
+          sweepMode: uniqueOnly ? "unique" : "full",
           referenceInterval,
           selectedChannels: channels,
           limit: requestedLimit
@@ -2103,8 +2233,8 @@
       persistState();
       renderConfig();
       renderWorkspace();
-      const referenceCount = studyItems.length - requestedPairs.length;
-      showToast(`${requestedPairs.length} stimulus hands and ${referenceCount} reference hands generated.`);
+      const referenceCount = studyItems.length - requestedCombinations.length;
+      showToast(`${requestedCombinations.length} stimulus combinations and ${referenceCount} reference hands generated.`);
     }
 
     /**
@@ -2191,6 +2321,8 @@
         creator: "Leonardo M. Ferrisi and contributors",
         participantId: state.config.participantId,
         handSide: state.config.handSide,
+        pairingMode: state.config.pairingMode,
+        sweepMode: state.config.sweepMode,
         order: index + 1,
         total: state.combinations.length,
         intensityScale: { least: 0, medium: 1, most: 2 },
@@ -2203,11 +2335,18 @@
       } else {
         const polarity = resolvePolarity(combination, drawing);
         studyMetadata.studyItemType = "stimulus";
-        studyMetadata.orderedPair = `Ch${combination.first}-->Ch${combination.second}`;
-        studyMetadata.firstChannel = `Ch${combination.first}`;
-        studyMetadata.secondChannel = `Ch${combination.second}`;
-        studyMetadata.anode = `Ch${polarity.anode}`;
+        studyMetadata.pairingMode = combination.kind === "triplet" ? "choose-3" : "choose-2";
+        studyMetadata.stimulusCombination = combinationTitle(combination);
+        studyMetadata.anodes = polarity.anodes.map((channel) => `Ch${channel}`);
+        studyMetadata.anode = `Ch${polarity.anodes[0]}`;
         studyMetadata.cathode = `Ch${polarity.cathode}`;
+        if (combination.kind === "triplet") {
+          studyMetadata.secondAnode = `Ch${polarity.anodes[1]}`;
+        } else {
+          studyMetadata.orderedPair = `Ch${combination.first}-->Ch${combination.second}`;
+          studyMetadata.firstChannel = `Ch${combination.first}`;
+          studyMetadata.secondChannel = `Ch${combination.second}`;
+        }
       }
       const metadata = document.createElementNS("http://www.w3.org/2000/svg", "metadata");
       metadata.textContent = JSON.stringify(studyMetadata);
@@ -2232,7 +2371,10 @@
         return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_${referenceTitle(combination)}.svg`;
       }
       const polarity = resolvePolarity(combination, drawing);
-      return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_anode-Ch${polarity.anode}_cathode-Ch${polarity.cathode}.svg`;
+      if (combination.kind === "triplet") {
+        return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_anodes-Ch${polarity.anodes[0]}+Ch${polarity.anodes[1]}_cathode-Ch${polarity.cathode}.svg`;
+      }
+      return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_anode-Ch${polarity.anodes[0]}_cathode-Ch${polarity.cathode}.svg`;
     }
 
     /**
@@ -2277,7 +2419,7 @@
     /** Builds and downloads every cached hand plus manifests as a ZIP. */
     function downloadStudyZip() {
       const files = [];
-      const manifestRows = [["order", "item_type", "item_title", "pair", "anode", "cathode", "hand_side", "completed", "saved_at", "filename"]];
+      const manifestRows = [["order", "item_type", "item_title", "pair", "anode", "cathode", "hand_side", "completed", "saved_at", "filename", "second_anode"]];
       state.combinations.forEach((combination, index) => {
         const drawing = getDrawing(combination);
         const filename = svgFilename(combination, index);
@@ -2286,16 +2428,20 @@
         let pair = "";
         let anode = "";
         let cathode = "";
+        let secondAnode = "";
         if (isReferenceItem(combination)) {
           itemType = "reference";
           itemTitle = referenceTitle(combination);
         } else {
           const polarity = resolvePolarity(combination, drawing);
           itemType = "stimulus";
-          itemTitle = `Ch${combination.first}-->Ch${combination.second}`;
+          itemTitle = combinationTitle(combination);
           pair = itemTitle;
-          anode = `Ch${polarity.anode}`;
+          anode = `Ch${polarity.anodes[0]}`;
           cathode = `Ch${polarity.cathode}`;
+          if (combination.kind === "triplet") {
+            secondAnode = `Ch${polarity.anodes[1]}`;
+          }
         }
         files.push({ name: filename, content: buildSvg(combination, index) });
         manifestRows.push([
@@ -2308,7 +2454,8 @@
           state.config.handSide,
           drawing.completed ? "true" : "false",
           drawing.savedAt || "",
-          filename
+          filename,
+          secondAnode
         ]);
       });
 
@@ -2508,6 +2655,12 @@
 
     // --- Event wiring ---
     document.querySelectorAll('#channel-grid input[type="checkbox"]').forEach((input) => {
+      input.addEventListener("change", updatePairEstimate);
+    });
+    document.querySelectorAll('input[name="choose-type"]').forEach((input) => {
+      input.addEventListener("change", updatePairEstimate);
+    });
+    document.querySelectorAll('input[name="sweep-mode"]').forEach((input) => {
       input.addEventListener("change", updatePairEstimate);
     });
     elements.studyLimit.addEventListener("input", updatePairEstimate);
