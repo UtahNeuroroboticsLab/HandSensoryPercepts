@@ -1933,7 +1933,7 @@
         const fill = drawing.fills[region.dataset.region];
         region.style.fill = fill ? fill.color : "#ffffff";
       });
-      if (state.config.handSide === "left") {
+      if (state.config.handSide === "right") {
         elements.handTransform.setAttribute("transform", "translate(81.09 0) scale(-1 1)");
       } else {
         elements.handTransform.removeAttribute("transform");
