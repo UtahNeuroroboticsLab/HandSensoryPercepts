@@ -1,0 +1,46 @@
+# Custom Rating Set Template for Hand Percept Mapper
+# Each [section] header becomes a rating label in the study sequence.
+# Edit the section names and descriptions to match your study protocol.
+
+[global]
+hand_side = "right"
+
+# Rating for test condition A
+[P1_testA]
+description = "Perceived intensity during test condition A"
+
+# Rating for test condition B
+[P1_testB]
+description = "Perceived intensity during test condition B"
+
+# Rating for test condition C
+[P1_testC]
+description = "Perceived intensity during test condition C"
+
+# Rating for test condition D
+[P1_testD]
+description = "Perceived intensity during test condition D"
+
+# Rating for test condition E
+[P1_testE]
+description = "Perceived intensity during test condition E"
+
+# Rating for test condition F
+[P1_testF]
+description = "Perceived intensity during test condition F"
+
+# Rating for test condition G
+[P1_testG]
+description = "Perceived intensity during test condition G"
+
+# Rating for test condition H
+[P1_testH]
+description = "Perceived intensity during test condition H"
+
+# Rating for test condition I
+[P1_testI]
+description = "Perceived intensity during test condition I"
+
+# Rating for test condition J
+[P1_testJ]
+description = "Perceived intensity during test condition J"

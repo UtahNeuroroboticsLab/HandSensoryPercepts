@@ -957,12 +957,29 @@
         </div>
 
         <div class="study-summary" aria-live="polite">
-          <div class="summary-stat"><strong id="selected-count">9</strong><span>electrodes</span></div>
+          <div class="summary-stat"><strong id="selected-count">9</strong><span id="selected-count-label">electrodes</span></div>
           <div class="summary-stat"><strong id="pair-count">72</strong><span id="pair-count-label">directed pairs</span></div>
           <div class="summary-stat"><strong id="study-item-count">80</strong><span>total hands</span></div>
         </div>
 
         <button class="button button-primary button-full" id="generate-study" type="button">Generate study sequence</button>
+
+        <div style="display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4);">
+          <hr style="flex: 1; border: 0; border-top: 1px solid var(--border);">
+          <span style="color: var(--fg-secondary); font-size: var(--text-label); text-transform: uppercase; font-weight: 700;">or</span>
+          <hr style="flex: 1; border: 0; border-top: 1px solid var(--border);">
+        </div>
+
+        <div style="margin-top: var(--space-3);">
+          <label class="field-label">Custom rating set</label>
+          <input type="file" id="toml-upload" accept=".toml" style="display: none;">
+          <button class="button button-full" id="load-toml" type="button">Load custom ratings (.toml)</button>
+          <div style="display: flex; gap: var(--space-2); margin-top: var(--space-2);">
+            <button class="button" id="download-template" type="button" style="flex: 1;">Download template</button>
+            <button class="button" id="clear-custom" type="button" style="flex: 1; display: none;">Clear custom set</button>
+          </div>
+          <p class="field-help" id="custom-status" style="display: none;"></p>
+        </div>
       </section>
 
       <section class="sidebar-section" aria-labelledby="intensity-heading">
@@ -1005,7 +1022,7 @@
       </section>
 
       <footer class="sidebar-footer">
-        Created for neuroengineering research by Leonardo M. Ferrisi and contributors. Drawings remain in this browser until the study is regenerated or browser data is cleared.
+        Created for neuroengineering research by Leonardo M. Ferrisi with contributions by Brayden VonHatten. Drawings remain in this browser until the study is regenerated or browser data is cleared.
       </footer>
     </aside>
 
@@ -1344,7 +1361,13 @@
       completionMessage: document.getElementById("completion-message"),
       reviewFirst: document.getElementById("review-first"),
       completionDownload: document.getElementById("completion-download"),
-      toast: document.getElementById("toast")
+      toast: document.getElementById("toast"),
+      selectedCountLabel: document.getElementById("selected-count-label"),
+      tomlUpload: document.getElementById("toml-upload"),
+      loadToml: document.getElementById("load-toml"),
+      downloadTemplate: document.getElementById("download-template"),
+      clearCustom: document.getElementById("clear-custom"),
+      customStatus: document.getElementById("custom-status")
     };
 
     let intensity = 1;
@@ -1869,6 +1892,113 @@
       return sequence;
     }
 
+    // --- Custom rating set (TOML) support ---
+
+    const CUSTOM_RATINGS_TEMPLATE = `# Custom Rating Set Template for Hand Percept Mapper
+# Each [section] header becomes a rating label in the study sequence.
+# Edit the section names and descriptions to match your study protocol.
+
+[global]
+hand_side = "right"
+
+# Rating for test condition A
+[P1_testA]
+description = "Perceived intensity during test condition A"
+
+# Rating for test condition B
+[P1_testB]
+description = "Perceived intensity during test condition B"
+
+# Rating for test condition C
+[P1_testC]
+description = "Perceived intensity during test condition C"
+
+# Rating for test condition D
+[P1_testD]
+description = "Perceived intensity during test condition D"
+
+# Rating for test condition E
+[P1_testE]
+description = "Perceived intensity during test condition E"
+
+# Rating for test condition F
+[P1_testF]
+description = "Perceived intensity during test condition F"
+
+# Rating for test condition G
+[P1_testG]
+description = "Perceived intensity during test condition G"
+
+# Rating for test condition H
+[P1_testH]
+description = "Perceived intensity during test condition H"
+
+# Rating for test condition I
+[P1_testI]
+description = "Perceived intensity during test condition I"
+
+# Rating for test condition J
+[P1_testJ]
+description = "Perceived intensity during test condition J"
+`;
+
+    /**
+     * Parses the subset of TOML used for custom rating sets.
+     * Supports [section] headers, key = "value" pairs, and # comments.
+     *
+     * @param {string} text raw TOML content
+     * @returns {{global: object, ratings: {label: string, description: string}[]}} parsed data
+     */
+    function parseCustomRatingsToml(text) {
+      const sections = {};
+      let currentSection = null;
+      const lines = text.split(/\r?\n/);
+      for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i].trim();
+        if (line === "" || line.startsWith("#")) {
+          continue;
+        }
+        const sectionMatch = line.match(/^\[([^\]]+)\]$/);
+        if (sectionMatch) {
+          currentSection = sectionMatch[1].trim();
+          if (!sections[currentSection]) {
+            sections[currentSection] = {};
+          }
+          continue;
+        }
+        const kvMatch = line.match(/^(\w+)\s*=\s*"([^"]*)"$/);
+        if (kvMatch && currentSection) {
+          sections[currentSection][kvMatch[1]] = kvMatch[2];
+        }
+      }
+      const globalSection = sections["global"] || {};
+      delete sections["global"];
+      const ratings = Object.entries(sections).map(([label, values]) => ({
+        label,
+        description: values.description || ""
+      }));
+      return { global: globalSection, ratings };
+    }
+
+    /**
+     * Builds study items from custom rating labels.
+     *
+     * @param {{label: string, description: string}[]} ratings custom rating definitions
+     * @returns {{kind: string, label: string, description: string}[]} custom study items
+     */
+    function buildCustomItems(ratings) {
+      return ratings.map((rating) => ({
+        kind: "custom",
+        label: rating.label,
+        description: rating.description
+      }));
+    }
+
+    /** Returns whether a study item is a custom rating. */
+    function isCustomItem(item) {
+      return item.kind === "custom";
+    }
+
     /** Returns whether a study item is a reference hand. */
     function isReferenceItem(item) {
       return item.kind === "reference";
@@ -1897,7 +2027,10 @@
           sweepMode: "full",
           referenceInterval: DEFAULT_REFERENCE_INTERVAL,
           selectedChannels: [...DEFAULT_CHANNELS],
-          limit: pairs.length
+          limit: pairs.length,
+          studyMode: "electrodes",
+          customRatings: null,
+          customFilename: ""
         },
         combinations,
         drawings: {},
@@ -1918,13 +2051,22 @@
         if (cached && cached.version === 5 && Array.isArray(cached.combinations) && cached.combinations.length > 0) {
           cached.config.pairingMode = cached.config.pairingMode === "choose-3" ? "choose-3" : "choose-2";
           cached.config.sweepMode = cached.config.sweepMode === "unique" ? "unique" : "full";
+          if (!cached.config.studyMode) {
+            cached.config.studyMode = "electrodes";
+          }
+          if (!cached.config.customRatings) {
+            cached.config.customRatings = null;
+          }
+          if (!cached.config.customFilename) {
+            cached.config.customFilename = "";
+          }
           const currentItem = cached.combinations[cached.currentIndex];
           let currentKey = null;
           if (currentItem) {
             currentKey = combinationKey(currentItem);
           }
-          const pairs = cached.combinations.filter((item) => !isReferenceItem(item));
-          cached.combinations = buildStudySequence(pairs, cached.config.referenceInterval);
+          const nonRefItems = cached.combinations.filter((item) => !isReferenceItem(item));
+          cached.combinations = buildStudySequence(nonRefItems, cached.config.referenceInterval);
           const migratedIndex = cached.combinations.findIndex((item) => combinationKey(item) === currentKey);
           if (migratedIndex >= 0) {
             cached.currentIndex = migratedIndex;
@@ -1962,14 +2104,20 @@
       if (isReferenceItem(combination)) {
         return `reference-${String(combination.referenceNumber).padStart(2, "0")}`;
       }
+      if (isCustomItem(combination)) {
+        return `custom-${combination.label}`;
+      }
       if (combination.kind === "triplet") {
         return `triplet-${combination.anodes.join("-")}-cathode-${combination.cathode}`;
       }
       return `${combination.first}-${combination.second}`;
     }
 
-    /** Returns the visible channel sequence for a stimulus item. */
+    /** Returns the visible title for a study item. */
     function combinationTitle(combination) {
+      if (isCustomItem(combination)) {
+        return combination.label;
+      }
       if (combination.kind === "triplet") {
         return `Ch${combination.anodes[0]} + Ch${combination.anodes[1]} --> Ch${combination.cathode}`;
       }
@@ -2194,6 +2342,8 @@
       }
       if (isReferenceItem(combination)) {
         elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} reference hand percept map ${referenceTitle(combination)}`;
+      } else if (isCustomItem(combination)) {
+        elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} hand percept map for ${combination.label}`;
       } else {
         elements.handSvgTitle.textContent = `${capitalize(state.config.handSide)} hand percept map for ${combinationTitle(combination)}`;
       }
@@ -2208,12 +2358,22 @@
       const position = String(state.currentIndex + 1).padStart(positionDigits, "0");
       const completedCount = state.combinations.filter((item) => getDrawing(item).completed).length;
 
+      elements.pairPosition.textContent = `Hand ${position} of ${total}`;
       if (isReferenceItem(combination)) {
         elements.pairTitle.textContent = referenceTitle(combination);
+        elements.pairTitle.title = "";
         elements.polarityGroup.hidden = true;
+      } else if (isCustomItem(combination)) {
+        elements.pairTitle.textContent = combination.label;
+        elements.pairTitle.title = combination.description || "";
+        elements.polarityGroup.hidden = true;
+        if (combination.description) {
+          elements.pairPosition.textContent = `Hand ${position} of ${total} | ${combination.description}`;
+        }
       } else {
         const polarity = resolvePolarity(combination, drawing);
         elements.pairTitle.textContent = combinationTitle(combination);
+        elements.pairTitle.title = "";
         elements.anodeChannel.textContent = polarity.anodes.map((channel) => `Ch${channel}`).join(" + ");
         elements.cathodeChannel.textContent = `Ch${polarity.cathode}`;
         elements.polarityGroup.hidden = false;
@@ -2221,7 +2381,6 @@
         elements.swapPolarity.hidden = polaritySwapUnavailable;
         elements.swapPolarity.disabled = polaritySwapUnavailable;
       }
-      elements.pairPosition.textContent = `Hand ${position} of ${total}`;
       elements.previousButton.disabled = state.currentIndex === 0;
       elements.nextButton.textContent = state.currentIndex === total - 1 ? "Save SVG + finish" : "Save SVG + next -->";
       elements.sequenceProgress.textContent = `${completedCount} / ${total}`;
@@ -2281,11 +2440,63 @@
       CHANNEL_ORDER.forEach((channel) => {
         document.getElementById(`channel-${channel}`).checked = state.config.selectedChannels.includes(channel);
       });
+      renderCustomModeUI();
       updatePairEstimate();
+    }
+
+    /** Shows or hides electrode controls based on whether custom mode is active. */
+    function renderCustomModeUI() {
+      const isCustom = state.config.studyMode === "custom";
+      const electrodeOnlyFields = [
+        elements.chooseTwo.closest("fieldset"),
+        elements.chooseThree.closest("fieldset"),
+        elements.sweepFull.closest("fieldset"),
+        elements.sweepUnique.closest("fieldset"),
+        document.getElementById("channel-grid").closest("fieldset"),
+        elements.firstRoleField,
+        elements.studyLimit.closest(".field")
+      ];
+      electrodeOnlyFields.forEach((field) => {
+        if (field) {
+          field.style.display = isCustom ? "none" : "";
+        }
+      });
+      elements.generateStudy.style.display = isCustom ? "none" : "";
+      elements.clearCustom.style.display = isCustom ? "" : "none";
+      if (isCustom && state.config.customRatings) {
+        elements.customStatus.style.display = "";
+        const ratingCount = state.config.customRatings.length;
+        const fileLabel = state.config.customFilename || "custom set";
+        elements.customStatus.textContent = `Loaded ${ratingCount} custom rating${ratingCount === 1 ? "" : "s"} from ${fileLabel}`;
+      } else {
+        elements.customStatus.style.display = "none";
+      }
+      if (isCustom) {
+        const handSideRadios = document.querySelectorAll('input[name="hand-side"]');
+        handSideRadios.forEach((radio) => { radio.disabled = true; });
+      } else {
+        const handSideRadios = document.querySelectorAll('input[name="hand-side"]');
+        handSideRadios.forEach((radio) => { radio.disabled = false; });
+      }
     }
 
     /** Updates the pending electrode and combination counts. */
     function updatePairEstimate() {
+      if (state.config.studyMode === "custom" && state.config.customRatings) {
+        const ratingCount = state.config.customRatings.length;
+        elements.selectedCount.textContent = ratingCount;
+        elements.selectedCountLabel.textContent = "ratings";
+        elements.pairCount.textContent = ratingCount;
+        elements.pairingCountHeading.textContent = "custom ratings";
+        elements.pairCountLabel.textContent = "custom ratings";
+        const referenceInterval = readReferenceInterval();
+        let referenceCount = 0;
+        if (referenceInterval > 0) {
+          referenceCount = Math.ceil(ratingCount / referenceInterval);
+        }
+        elements.studyItemCount.textContent = ratingCount + referenceCount;
+        return;
+      }
       const channels = readSelectedChannels();
       const chooseThree = elements.chooseThree.checked;
       const uniqueOnly = elements.sweepUnique.checked;
@@ -2305,6 +2516,7 @@
       const limitWasPreviousMaximum = currentLimit === previousMaximum;
       elements.firstRoleField.hidden = chooseThree;
       elements.selectedCount.textContent = channels.length;
+      elements.selectedCountLabel.textContent = "electrodes";
       elements.pairCount.textContent = count;
       elements.pairingCountHeading.textContent = combinationLabel;
       elements.studyLimitLabel.textContent = chooseThree
@@ -2380,7 +2592,10 @@
           sweepMode: uniqueOnly ? "unique" : "full",
           referenceInterval,
           selectedChannels: channels,
-          limit: requestedLimit
+          limit: requestedLimit,
+          studyMode: "electrodes",
+          customRatings: null,
+          customFilename: ""
         },
         combinations: studyItems,
         drawings: {},
@@ -2526,6 +2741,10 @@
       if (isReferenceItem(combination)) {
         studyMetadata.studyItemType = "reference";
         studyMetadata.referenceId = referenceTitle(combination);
+      } else if (isCustomItem(combination)) {
+        studyMetadata.studyItemType = "custom";
+        studyMetadata.customLabel = combination.label;
+        studyMetadata.customDescription = combination.description;
       } else {
         const polarity = resolvePolarity(combination, drawing);
         studyMetadata.studyItemType = "stimulus";
@@ -2563,6 +2782,10 @@
       const order = String(index + 1).padStart(orderDigits, "0");
       if (isReferenceItem(combination)) {
         return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_${referenceTitle(combination)}.svg`;
+      }
+      if (isCustomItem(combination)) {
+        const safeLabel = sanitizeFilename(combination.label);
+        return `${participantPrefix}hand_${order}_of_${state.combinations.length}_${state.config.handSide}_${safeLabel}.svg`;
       }
       const polarity = resolvePolarity(combination, drawing);
       if (combination.kind === "triplet") {
@@ -2613,7 +2836,7 @@
     /** Builds and downloads every cached hand plus manifests as a ZIP. */
     function downloadStudyZip() {
       const files = [];
-      const manifestRows = [["order", "item_type", "item_title", "pair", "anode", "cathode", "hand_side", "completed", "saved_at", "filename", "second_anode"]];
+      const manifestRows = [["order", "item_type", "item_title", "pair", "anode", "cathode", "hand_side", "completed", "saved_at", "filename", "second_anode", "custom_description"]];
       state.combinations.forEach((combination, index) => {
         const drawing = getDrawing(combination);
         const filename = svgFilename(combination, index);
@@ -2623,9 +2846,14 @@
         let anode = "";
         let cathode = "";
         let secondAnode = "";
+        let customDescription = "";
         if (isReferenceItem(combination)) {
           itemType = "reference";
           itemTitle = referenceTitle(combination);
+        } else if (isCustomItem(combination)) {
+          itemType = "custom";
+          itemTitle = combination.label;
+          customDescription = combination.description || "";
         } else {
           const polarity = resolvePolarity(combination, drawing);
           itemType = "stimulus";
@@ -2650,7 +2878,8 @@
           drawing.completed ? "true" : "false",
           drawing.savedAt || "",
           filename,
-          secondAnode
+          secondAnode,
+          customDescription
         ]);
       });
 
@@ -2857,6 +3086,74 @@
       return value.charAt(0).toUpperCase() + value.slice(1);
     }
 
+    /** Loads a custom rating TOML file and rebuilds the study from it. */
+    function loadCustomRatingsFile(file) {
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        const text = reader.result;
+        let parsed;
+        try {
+          parsed = parseCustomRatingsToml(text);
+        } catch (error) {
+          showToast("Could not parse the TOML file. Check the format and try again.");
+          return;
+        }
+        if (parsed.ratings.length === 0) {
+          showToast("No rating sections found in the TOML file. Each [section] becomes a rating.");
+          return;
+        }
+        const hasWork = Object.values(state.drawings).some((drawing) => drawing.savedAt || drawing.completed);
+        if (hasWork && !window.confirm("Load custom ratings? Existing cached drawings will be replaced.")) {
+          return;
+        }
+        const handSide = parsed.global.hand_side === "left" ? "left" : "right";
+        const referenceInterval = readReferenceInterval();
+        const customItems = buildCustomItems(parsed.ratings);
+        const studyItems = buildStudySequence(customItems, referenceInterval);
+        state = {
+          version: 5,
+          config: {
+            participantId: elements.participantId.value.trim(),
+            handSide,
+            firstRole: state.config.firstRole,
+            pairingMode: state.config.pairingMode,
+            sweepMode: state.config.sweepMode,
+            referenceInterval,
+            selectedChannels: state.config.selectedChannels,
+            limit: parsed.ratings.length,
+            studyMode: "custom",
+            customRatings: parsed.ratings,
+            customFilename: file.name
+          },
+          combinations: studyItems,
+          drawings: {},
+          currentIndex: 0,
+          complete: false,
+          updatedAt: new Date().toISOString()
+        };
+        persistState();
+        renderConfig();
+        renderWorkspace();
+        const referenceCount = studyItems.length - customItems.length;
+        showToast(`${parsed.ratings.length} custom ratings and ${referenceCount} reference hands loaded.`);
+      }, { once: true });
+      reader.readAsText(file);
+    }
+
+    /** Clears custom mode and returns to electrode-based study generation. */
+    function clearCustomRatings() {
+      const hasWork = Object.values(state.drawings).some((drawing) => drawing.savedAt || drawing.completed);
+      if (hasWork && !window.confirm("Clear custom ratings and return to electrode mode? Existing drawings will be replaced.")) {
+        return;
+      }
+      state.config.studyMode = "electrodes";
+      state.config.customRatings = null;
+      state.config.customFilename = "";
+      elements.tomlUpload.value = "";
+      renderConfig();
+      applyStudyConfig();
+    }
+
     // --- Event wiring ---
     document.querySelectorAll('#channel-grid input[type="checkbox"]').forEach((input) => {
       input.addEventListener("change", updatePairEstimate);
@@ -2881,6 +3178,17 @@
     elements.downloadAll.addEventListener("click", downloadStudyZip);
     elements.completionDownload.addEventListener("click", downloadStudyZip);
     elements.reviewFirst.addEventListener("click", () => navigateTo(0));
+    elements.loadToml.addEventListener("click", () => elements.tomlUpload.click());
+    elements.tomlUpload.addEventListener("change", () => {
+      const file = elements.tomlUpload.files[0];
+      if (file) {
+        loadCustomRatingsFile(file);
+      }
+    });
+    elements.downloadTemplate.addEventListener("click", () => {
+      downloadText(CUSTOM_RATINGS_TEMPLATE, "custom_ratings_template.toml", "application/toml");
+    });
+    elements.clearCustom.addEventListener("click", clearCustomRatings);
 
     elements.intensityRail.addEventListener("pointerdown", (event) => {
       elements.intensityRail.setPointerCapture(event.pointerId);
