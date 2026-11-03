@@ -1,0 +1,86 @@
+Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA 4.0)
+with Supplemental Academic Attribution Clause
+
+Copyright (c) 2026 Leonardo M. Ferrisi
+
+This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+International License. To view a copy of this license, visit:
+
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042.
+
+--------------------------------------------------------------------------------
+
+SUPPLEMENTAL CLAUSE: ACADEMIC AND RESEARCH ATTRIBUTION
+
+In addition to the attribution requirements of CC-BY-SA 4.0, any academic
+publication, conference paper, poster, thesis, report, or dataset release
+that includes data collected using this software, or that describes methods
+relying on this software, must satisfy AT LEAST ONE of the following:
+
+  (a) CITATION: Cite the original author and repository in the
+      publication's references:
+
+          Leonardo M. Ferrisi
+          Hand Percept Mapper
+          https://github.com/UtahNeuroroboticsLab/HandSensoryPercepts
+
+  OR
+
+  (b) ACADEMIC CONTRIBUTION CREDIT: Include Leonardo M. Ferrisi as a
+      co-author, contributor, or in the acknowledgments section of the
+      publication, commensurate with the role the software played in the
+      work.
+
+Either option fully satisfies this clause. The choice is left to the
+publishing authors, and the obligation applies regardless of whether the
+software was used in its original form or as a modified derivative.
+
+For questions about attribution, collaboration, or co-authorship,
+contact: Leonardo.Ferrisi@utah.edu
+
+--------------------------------------------------------------------------------
+
+SUMMARY OF CC-BY-SA 4.0 TERMS
+
+You are free to:
+
+  - Share: copy and redistribute the material in any medium or format, for
+    any purpose, including commercially.
+
+  - Adapt: remix, transform, and build upon the material for any purpose,
+    including commercially.
+
+Under the following terms:
+
+  - Attribution: You must give appropriate credit to Leonardo M. Ferrisi,
+    provide a link to this license, and indicate if changes were made. You
+    may do so in any reasonable manner, but not in any way that suggests
+    the licensor endorses you or your use.
+
+  - ShareAlike: If you remix, transform, or build upon this material, you
+    must distribute your contributions under the same license as the
+    original (CC-BY-SA 4.0 with this supplemental clause).
+
+  - No additional restrictions: You may not apply legal terms or
+    technological measures that legally restrict others from doing anything
+    the license permits.
+
+The above summary is for convenience only. The full legal text of CC-BY-SA
+4.0 at the URL above governs.
+
+--------------------------------------------------------------------------------
+
+NOTICE OF ATTRIBUTION ELEMENTS
+
+The following elements are part of the required attribution under this
+license and must not be removed or obscured in any copy or derivative work:
+
+  - The author watermark in the hand painting workspace
+  - The loading screen credit
+  - The sidebar byline
+  - The footer credit line
+
+Removing or hiding these elements constitutes a violation of the attribution
+requirement of CC-BY-SA 4.0.

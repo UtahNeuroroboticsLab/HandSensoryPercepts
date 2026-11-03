@@ -608,8 +608,22 @@
       padding: var(--space-6);
     }
 
+    .hand-stage::before {
+      content: "";
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='28'%3E%3Ctext x='0' y='20' font-family='Arial,Helvetica,sans-serif' font-size='14' font-weight='700' letter-spacing='0.1em' fill='%23000' opacity='0.07'%3ELEONARDO M FERRISI ~ LEONARDO M FERRISI ~%3C/text%3E%3C/svg%3E");
+      background-repeat: repeat;
+      transform: rotate(-45deg);
+      pointer-events: none;
+      z-index: 0;
+    }
+
     .hand-board {
       position: relative;
+      z-index: 1;
       display: flex;
       width: min(100%, 740px);
       height: 100%;
@@ -822,6 +836,93 @@
       }
     }
 
+    .license-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .license-overlay.show {
+      display: flex;
+    }
+
+    .license-modal {
+      width: min(620px, calc(100% - 32px));
+      max-height: calc(100vh - 64px);
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border-strong);
+      background: var(--white);
+    }
+
+    .license-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .license-modal-header h3 {
+      margin: 0;
+      font-family: var(--font-content);
+      font-size: var(--text-h2);
+    }
+
+    .license-modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-5);
+      font-family: var(--font-mono);
+      font-size: var(--text-code);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-5);
+      background: var(--white);
+      transition: opacity 0.5s ease;
+    }
+
+    .loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-screen img {
+      width: 120px;
+      height: 120px;
+      animation: loading-pulse 1.8s ease-in-out infinite;
+    }
+
+    .loading-screen p {
+      margin: 0;
+      color: var(--fg-secondary);
+      font-family: var(--font-ui);
+      font-size: var(--text-ui);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    @keyframes loading-pulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.96); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
     @media (max-width: 560px) {
       .workspace-header,
       .workspace-footer,
@@ -854,12 +955,20 @@
   </style>
 </head>
 <body>
-  <main class="app-shell">
+  <div class="loading-screen" id="loading-screen">
+    <img src="assets/leonardomferrisi_stamp.svg" alt="Leonardo M. Ferrisi" width="120" height="120">
+    <p>Hand percept mapper</p>
+    <p style="margin: 0; font-family: var(--font-content); font-style: italic; font-size: var(--text-ui); text-transform: none; font-weight: 400; letter-spacing: 0;">by Leonardo M. Ferrisi</p>
+  </div>
+
+  <main class="app-shell" style="opacity: 0;">
     <aside class="sidebar" aria-label="Study controls">
       <header class="brand">
         <span class="brand-kicker">Neuroengineering research tool</span>
         <h1>Hand percept mapper</h1>
+        <p style="margin: var(--space-1) 0 0; font-family: var(--font-content); font-style: italic; font-size: var(--text-ui);">by Leonardo M. Ferrisi</p>
         <p>Configure stimulation pairs, record perceived regions, and export study-ready vector files.</p>
+        <p style="margin: var(--space-2) 0 0; font-size: 13px;">Using this for your research or interested in modifying this? Make sure to read our <a href="#" id="open-license" style="color: var(--fg); font-weight: 700;">LICENSE</a></p>
       </header>
 
       <section class="sidebar-section" aria-labelledby="config-heading">
@@ -1145,6 +1254,16 @@
       </footer>
     </section>
   </main>
+
+  <div class="license-overlay" id="license-overlay">
+    <div class="license-modal" role="dialog" aria-modal="true" aria-labelledby="license-modal-title">
+      <div class="license-modal-header">
+        <h3 id="license-modal-title">License</h3>
+        <button class="button" id="close-license" type="button">Close</button>
+      </div>
+      <div class="license-modal-body" id="license-modal-body"></div>
+    </div>
+  </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -3190,6 +3309,29 @@ description = "Perceived intensity during test condition J"
     });
     elements.clearCustom.addEventListener("click", clearCustomRatings);
 
+    const licenseOverlay = document.getElementById("license-overlay");
+    const licenseBody = document.getElementById("license-modal-body");
+    const LICENSE_TEXT = "Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA 4.0)\nwith Supplemental Academic Attribution Clause\n\nCopyright (c) 2026 Leonardo M. Ferrisi\n\nThis work is licensed under the Creative Commons Attribution-ShareAlike 4.0\nInternational License. To view a copy of this license, visit:\n\n    https://creativecommons.org/licenses/by-sa/4.0/\n\n--------------------------------------------------------------------------------\n\nSUPPLEMENTAL CLAUSE: ACADEMIC AND RESEARCH ATTRIBUTION\n\nIn addition to the attribution requirements of CC-BY-SA 4.0, any academic\npublication, conference paper, poster, thesis, report, or dataset release\nthat includes data collected using this software, or that describes methods\nrelying on this software, must satisfy AT LEAST ONE of the following:\n\n  (a) CITATION: Cite the original author and repository in the\n      publication's references:\n\n          Leonardo M. Ferrisi\n          Hand Percept Mapper\n          https://github.com/UtahNeuroroboticsLab/HandSensoryPercepts\n\n  OR\n\n  (b) ACADEMIC CONTRIBUTION CREDIT: Include Leonardo M. Ferrisi as a\n      co-author, contributor, or in the acknowledgments section of the\n      publication, commensurate with the role the software played in the\n      work.\n\nEither option fully satisfies this clause. The choice is left to the\npublishing authors, and the obligation applies regardless of whether the\nsoftware was used in its original form or as a modified derivative.\n\nFor questions about attribution, collaboration, or co-authorship,\ncontact: Leonardo.Ferrisi@utah.edu\n\n--------------------------------------------------------------------------------\n\nSUMMARY OF CC-BY-SA 4.0 TERMS\n\nYou are free to:\n\n  - Share: copy and redistribute the material in any medium or format, for\n    any purpose, including commercially.\n\n  - Adapt: remix, transform, and build upon the material for any purpose,\n    including commercially.\n\nUnder the following terms:\n\n  - Attribution: You must give appropriate credit to Leonardo M. Ferrisi,\n    provide a link to this license, and indicate if changes were made. You\n    may do so in any reasonable manner, but not in any way that suggests\n    the licensor endorses you or your use.\n\n  - ShareAlike: If you remix, transform, or build upon this material, you\n    must distribute your contributions under the same license as the\n    original (CC-BY-SA 4.0 with this supplemental clause).\n\n  - No additional restrictions: You may not apply legal terms or\n    technological measures that legally restrict others from doing anything\n    the license permits.\n\nThe above summary is for convenience only. The full legal text of CC-BY-SA\n4.0 at the URL above governs.\n\n--------------------------------------------------------------------------------\n\nNOTICE OF ATTRIBUTION ELEMENTS\n\nThe following elements are part of the required attribution under this\nlicense and must not be removed or obscured in any copy or derivative work:\n\n  - The author watermark in the hand painting workspace\n  - The loading screen credit\n  - The sidebar byline\n  - The footer credit line\n\nRemoving or hiding these elements constitutes a violation of the attribution\nrequirement of CC-BY-SA 4.0.";
+
+    document.getElementById("open-license").addEventListener("click", (event) => {
+      event.preventDefault();
+      licenseBody.textContent = LICENSE_TEXT;
+      licenseOverlay.classList.add("show");
+    });
+    document.getElementById("close-license").addEventListener("click", () => {
+      licenseOverlay.classList.remove("show");
+    });
+    licenseOverlay.addEventListener("click", (event) => {
+      if (event.target === licenseOverlay) {
+        licenseOverlay.classList.remove("show");
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && licenseOverlay.classList.contains("show")) {
+        licenseOverlay.classList.remove("show");
+      }
+    });
+
     elements.intensityRail.addEventListener("pointerdown", (event) => {
       elements.intensityRail.setPointerCapture(event.pointerId);
       setIntensityFromPointer(event);
@@ -3247,6 +3389,8 @@ description = "Perceived intensity during test condition J"
     });
 
     // --- Initial render ---
+    const loadingStartTime = Date.now();
+
     async function initializeApplication() {
       renderConfig();
       setIntensity(1);
@@ -3258,6 +3402,19 @@ description = "Perceived intensity during test condition J"
         updateAutosave("Hand unavailable", "Boundary detection failed");
         showToast("The hand regions could not be prepared. Reload the page to try again.");
       }
+      dismissLoadingScreen();
+    }
+
+    function dismissLoadingScreen() {
+      const elapsed = Date.now() - loadingStartTime;
+      const remaining = Math.max(0, 3000 - elapsed);
+      window.setTimeout(() => {
+        const screen = document.getElementById("loading-screen");
+        const appShell = document.querySelector(".app-shell");
+        appShell.style.opacity = "1";
+        screen.classList.add("fade-out");
+        window.setTimeout(() => screen.remove(), 500);
+      }, remaining);
     }
 
     initializeApplication();
