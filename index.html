@@ -1139,6 +1139,164 @@
     const DEFAULT_REFERENCE_INTERVAL = 10;
     const MAX_UNDO = 30;
 
+    // --- Region label and reference data (from region_labels.json / regions.jsonc) ---
+    const REGION_LABELS = {
+      "region-001": "M1", "region-002": "M2", "region-003": "R1", "region-004": "M3",
+      "region-005": "R2", "region-006": "M4", "region-007": "I2", "region-008": "I1",
+      "region-009": "R3", "region-010": "R4", "region-011": "I4", "region-012": "M5",
+      "region-013": "M6", "region-014": "I3", "region-015": "R5", "region-016": "R6",
+      "region-017": "I6", "region-018": "M7", "region-019": "M8", "region-020": "I5",
+      "region-021": "R7", "region-022": "K1", "region-023": "K2", "region-024": "R8",
+      "region-025": "I8", "region-026": "K3", "region-027": "P15", "region-028": "K4",
+      "region-029": "I7", "region-030": "M9", "region-031": "M10", "region-032": "R9",
+      "region-033": "K5", "region-034": "I10", "region-035": "R10", "region-036": "K6",
+      "region-037": "I9", "region-038": "P26", "region-039": "P25", "region-040": "P27",
+      "region-041": "K7", "region-042": "K8", "region-043": "P28", "region-044": "P22",
+      "region-045": "P21", "region-046": "P23", "region-047": "T2", "region-048": "T1",
+      "region-049": "T4", "region-051": "T6", "region-052": "T3", "region-053": "P24",
+      "region-054": "P17", "region-055": "P16", "region-056": "P18", "region-057": "T5",
+      "region-058": "T8", "region-059": "P19", "region-060": "T7", "region-061": "P12",
+      "region-062": "P13", "region-063": "P20", "region-064": "P11", "region-065": "P14",
+      "region-067": "P6", "region-068": "P5", "region-069": "P8", "region-070": "P9",
+      "region-071": "P10", "region-072": "P1", "region-073": "P2", "region-074": "P3",
+      "region-075": "P4", "region-076": "W13", "region-077": "W15", "region-078": "W14",
+      "region-079": "W16", "region-080": "W9", "region-081": "W10", "region-082": "W11",
+      "region-083": "W12", "region-084": "W5", "region-085": "W7", "region-086": "W6",
+      "region-087": "W8", "region-088": "W1", "region-089": "W2", "region-090": "W3",
+      "region-091": "W4"
+    };
+    const REGION_GROUPS = {
+      W: { name: "wrist",  labels: [] },
+      P: { name: "palm",   labels: [] },
+      T: { name: "thumb",  labels: [] },
+      I: { name: "index",  labels: [] },
+      M: { name: "middle", labels: [] },
+      R: { name: "ring",   labels: [] },
+      K: { name: "pinky",  labels: [] }
+    };
+    const REVERSE_LABELS = {};
+    Object.entries(REGION_LABELS).forEach(([regionId, label]) => {
+      REVERSE_LABELS[label] = regionId;
+      const prefix = label.charAt(0);
+      if (REGION_GROUPS[prefix]) {
+        REGION_GROUPS[prefix].labels.push(label);
+      }
+    });
+    Object.values(REGION_GROUPS).forEach((group) => {
+      group.labels.sort((a, b) => {
+        const numA = parseInt(a.substring(1), 10);
+        const numB = parseInt(b.substring(1), 10);
+        return numA - numB;
+      });
+    });
+    const REGIONS_JSONC_CONTENT = `{
+    // width and height are the pixel coordinates to look at when evaluating that region
+    "wrist": {
+        "W1":  { "width": 1466, "height": 4883, "color": [255, 255, 255], "intensity": 0.0 },
+        "W2":  { "width": 1800, "height": 4883, "color": [255, 255, 255], "intensity": 0.0 },
+        "W3":  { "width": 2130, "height": 4883, "color": [255, 255, 255], "intensity": 0.0 },
+        "W4":  { "width": 2399, "height": 4883, "color": [255, 255, 255], "intensity": 0.0 },
+        "W5":  { "width": 1466, "height": 4554, "color": [255, 255, 255], "intensity": 0.0 },
+        "W6":  { "width": 1800, "height": 4554, "color": [255, 255, 255], "intensity": 0.0 },
+        "W7":  { "width": 2130, "height": 4554, "color": [255, 255, 255], "intensity": 0.0 },
+        "W8":  { "width": 2399, "height": 4554, "color": [255, 255, 255], "intensity": 0.0 },
+        "W9":  { "width": 1466, "height": 4194, "color": [255, 255, 255], "intensity": 0.0 },
+        "W10": { "width": 1800, "height": 4194, "color": [255, 255, 255], "intensity": 0.0 },
+        "W11": { "width": 2130, "height": 4194, "color": [255, 255, 255], "intensity": 0.0 },
+        "W12": { "width": 2399, "height": 4194, "color": [255, 255, 255], "intensity": 0.0 },
+        "W13": { "width": 1466, "height": 3937, "color": [255, 255, 255], "intensity": 0.0 },
+        "W14": { "width": 1800, "height": 3937, "color": [255, 255, 255], "intensity": 0.0 },
+        "W15": { "width": 2130, "height": 3937, "color": [255, 255, 255], "intensity": 0.0 },
+        "W16": { "width": 2399, "height": 3937, "color": [255, 255, 255], "intensity": 0.0 }
+    },
+    "palm": {
+        "P1":  { "width": 1525, "height": 3680, "color": [255, 255, 255], "intensity": 0.0 },
+        "P2":  { "width": 1771, "height": 3668, "color": [255, 255, 255], "intensity": 0.0 },
+        "P3":  { "width": 2200, "height": 3700, "color": [255, 255, 255], "intensity": 0.0 },
+        "P4":  { "width": 2470, "height": 3794, "color": [255, 255, 255], "intensity": 0.0 },
+        "P5":  { "width": 1089, "height": 3279, "color": [255, 255, 255], "intensity": 0.0 },
+        "P6":  { "width": 1448, "height": 3351, "color": [255, 255, 255], "intensity": 0.0 },
+        "P7":  { "width": 1490, "height": 3381, "color": [255, 255, 255], "intensity": 0.0 },
+        "P8":  { "width": 1855, "height": 3411, "color": [255, 255, 255], "intensity": 0.0 },
+        "P9":  { "width": 2178, "height": 3482, "color": [255, 255, 255], "intensity": 0.0 },
+        "P10": { "width": 2501, "height": 3638, "color": [255, 255, 255], "intensity": 0.0 },
+        "P11": { "width": 1137, "height": 2980, "color": [255, 255, 255], "intensity": 0.0 },
+        "P12": { "width": 1520, "height": 2986, "color": [255, 255, 255], "intensity": 0.0 },
+        "P13": { "width": 1843, "height": 2986, "color": [255, 255, 255], "intensity": 0.0 },
+        "P14": { "width": 2345, "height": 3243, "color": [255, 255, 255], "intensity": 0.0 },
+        "P15": { "width": 2939, "height": 3351, "color": [255, 255, 255], "intensity": 0.0 },
+        "P16": { "width": 1196, "height": 2692, "color": [255, 255, 255], "intensity": 0.0 },
+        "P17": { "width": 1454, "height": 2555, "color": [255, 255, 255], "intensity": 0.0 },
+        "P18": { "width": 1855, "height": 2585, "color": [255, 255, 255], "intensity": 0.0 },
+        "P19": { "width": 2286, "height": 2800, "color": [255, 255, 255], "intensity": 0.0 },
+        "P20": { "width": 2669, "height": 2982, "color": [255, 255, 255], "intensity": 0.0 },
+        "P21": { "width": 1424, "height": 2172, "color": [255, 255, 255], "intensity": 0.0 },
+        "P22": { "width": 1920, "height": 2160, "color": [255, 255, 255], "intensity": 0.0 },
+        "P23": { "width": 2300, "height": 2363, "color": [255, 255, 255], "intensity": 0.0 },
+        "P24": { "width": 2700, "height": 2651, "color": [255, 255, 255], "intensity": 0.0 },
+        "P25": { "width": 1400, "height": 1855, "color": [255, 255, 255], "intensity": 0.0 },
+        "P26": { "width": 1873, "height": 1765, "color": [255, 255, 255], "intensity": 0.0 },
+        "P27": { "width": 2357, "height": 1950, "color": [255, 255, 255], "intensity": 0.0 },
+        "P28": { "width": 2770, "height": 2202, "color": [255, 255, 255], "intensity": 0.0 }
+    },
+    "thumb": {
+        "T1": { "width": 107, "height": 2166, "color": [255, 255, 255], "intensity": 0.0 },
+        "T2": { "width": 300, "height": 2076, "color": [255, 255, 255], "intensity": 0.0 },
+        "T3": { "width": 412, "height": 2357, "color": [255, 255, 255], "intensity": 0.0 },
+        "T4": { "width": 472, "height": 2190, "color": [255, 255, 255], "intensity": 0.0 },
+        "T5": { "width": 600, "height": 2561, "color": [255, 255, 255], "intensity": 0.0 },
+        "T6": { "width": 700, "height": 2411, "color": [255, 255, 255], "intensity": 0.0 },
+        "T7": { "width": 800, "height": 2866, "color": [255, 255, 255], "intensity": 0.0 },
+        "T8": { "width": 945, "height": 2651, "color": [255, 255, 255], "intensity": 0.0 }
+    },
+    "index": {
+        "I1":  { "width": 945,  "height": 490,  "color": [255, 255, 255], "intensity": 0.0 },
+        "I2":  { "width": 1077, "height": 424,  "color": [255, 255, 255], "intensity": 0.0 },
+        "I3":  { "width": 993,  "height": 765,  "color": [255, 255, 255], "intensity": 0.0 },
+        "I4":  { "width": 1160, "height": 712,  "color": [255, 255, 255], "intensity": 0.0 },
+        "I5":  { "width": 1095, "height": 1065, "color": [255, 255, 255], "intensity": 0.0 },
+        "I6":  { "width": 1232, "height": 981,  "color": [255, 255, 255], "intensity": 0.0 },
+        "I7":  { "width": 1178, "height": 1388, "color": [255, 255, 255], "intensity": 0.0 },
+        "I8":  { "width": 1364, "height": 1292, "color": [255, 255, 255], "intensity": 0.0 },
+        "I9":  { "width": 1316, "height": 1639, "color": [255, 255, 255], "intensity": 0.0 },
+        "I10": { "width": 1448, "height": 1567, "color": [255, 255, 255], "intensity": 0.0 }
+    },
+    "middle": {
+        "M1":  { "width": 1891, "height": 131,  "color": [255, 255, 255], "intensity": 0.0 },
+        "M2":  { "width": 2000, "height": 200,  "color": [255, 255, 255], "intensity": 0.0 },
+        "M3":  { "width": 1825, "height": 412,  "color": [255, 255, 255], "intensity": 0.0 },
+        "M4":  { "width": 2000, "height": 430,  "color": [255, 255, 255], "intensity": 0.0 },
+        "M5":  { "width": 1807, "height": 712,  "color": [255, 255, 255], "intensity": 0.0 },
+        "M6":  { "width": 1980, "height": 706,  "color": [255, 255, 255], "intensity": 0.0 },
+        "M7":  { "width": 1777, "height": 1077, "color": [255, 255, 255], "intensity": 0.0 },
+        "M8":  { "width": 1920, "height": 1077, "color": [255, 255, 255], "intensity": 0.0 },
+        "M9":  { "width": 1795, "height": 1406, "color": [255, 255, 255], "intensity": 0.0 },
+        "M10": { "width": 1962, "height": 1400, "color": [255, 255, 255], "intensity": 0.0 }
+    },
+    "ring": {
+        "R1":  { "width": 2600, "height": 300,  "color": [255, 255, 255], "intensity": 0.0 },
+        "R2":  { "width": 2728, "height": 353,  "color": [255, 255, 255], "intensity": 0.0 },
+        "R3":  { "width": 2555, "height": 562,  "color": [255, 255, 255], "intensity": 0.0 },
+        "R4":  { "width": 2669, "height": 574,  "color": [255, 255, 255], "intensity": 0.0 },
+        "R5":  { "width": 2477, "height": 519,  "color": [255, 255, 255], "intensity": 0.0 },
+        "R6":  { "width": 2621, "height": 879,  "color": [255, 255, 255], "intensity": 0.0 },
+        "R7":  { "width": 2417, "height": 1154, "color": [255, 255, 255], "intensity": 0.0 },
+        "R8":  { "width": 2560, "height": 1260, "color": [255, 255, 255], "intensity": 0.0 },
+        "R9":  { "width": 2280, "height": 1514, "color": [255, 255, 255], "intensity": 0.0 },
+        "R10": { "width": 2453, "height": 1615, "color": [255, 255, 255], "intensity": 0.0 }
+    },
+    "pinky": {
+        "K1": { "width": 3207, "height": 1029, "color": [255, 255, 255], "intensity": 0.0 },
+        "K2": { "width": 3297, "height": 1113, "color": [255, 255, 255], "intensity": 0.0 },
+        "K3": { "width": 3069, "height": 1238, "color": [255, 255, 255], "intensity": 0.0 },
+        "K4": { "width": 3195, "height": 1352, "color": [255, 255, 255], "intensity": 0.0 },
+        "K5": { "width": 2900, "height": 1555, "color": [255, 255, 255], "intensity": 0.0 },
+        "K6": { "width": 3000, "height": 1630, "color": [255, 255, 255], "intensity": 0.0 },
+        "K7": { "width": 2800, "height": 1790, "color": [255, 255, 255], "intensity": 0.0 },
+        "K8": { "width": 2890, "height": 1900, "color": [255, 255, 255], "intensity": 0.0 }
+    }
+}`;
+
     const elements = {
       participantId: document.getElementById("participant-id"),
       firstRole: document.getElementById("first-role"),
@@ -2262,8 +2420,10 @@
       const drawing = getDrawing(combination);
       drawing.savedAt = new Date().toISOString();
       persistState();
-      downloadText(buildSvg(combination, state.currentIndex), svgFilename(combination, state.currentIndex), "image/svg+xml");
-      showToast("Current hand cached and downloaded as SVG.");
+      const filename = svgFilename(combination, state.currentIndex);
+      downloadText(buildSvg(combination, state.currentIndex), filename, "image/svg+xml");
+      downloadText(buildRegionIntensityJsonc(combination, state.currentIndex), filename.replace(/\.svg$/, ".jsonc"), "application/json");
+      showToast("Current hand cached and downloaded as SVG + JSONC.");
     }
 
     /** Saves and downloads the current SVG, then advances the study. */
@@ -2277,7 +2437,9 @@
       drawing.completed = true;
       drawing.savedAt = new Date().toISOString();
       persistState();
-      downloadText(buildSvg(combination, state.currentIndex), svgFilename(combination, state.currentIndex), "image/svg+xml");
+      const filename = svgFilename(combination, state.currentIndex);
+      downloadText(buildSvg(combination, state.currentIndex), filename, "image/svg+xml");
+      downloadText(buildRegionIntensityJsonc(combination, state.currentIndex), filename.replace(/\.svg$/, ".jsonc"), "application/json");
 
       if (state.currentIndex < state.combinations.length - 1) {
         state.currentIndex += 1;
@@ -2290,6 +2452,38 @@
         renderWorkspace();
         elements.completionDownload.focus();
       }
+    }
+
+    /**
+     * Builds a JSONC string with per-region intensities grouped by body part.
+     *
+     * @param {object} combination study item
+     * @param {number} index combination index
+     * @returns {string} JSONC content
+     */
+    function buildRegionIntensityJsonc(combination, index) {
+      const drawing = getDrawing(combination);
+      const filename = svgFilename(combination, index).replace(/\.svg$/, "");
+      const lines = [];
+      lines.push(`// Region intensities for ${filename}`);
+      lines.push("// Scale: 0.0 (least) to 2.0 (most), null = not rated");
+      lines.push("{");
+      const groupKeys = Object.keys(REGION_GROUPS);
+      groupKeys.forEach((prefix, groupIndex) => {
+        const group = REGION_GROUPS[prefix];
+        lines.push(`    "${group.name}": {`);
+        group.labels.forEach((label, labelIndex) => {
+          const regionId = REVERSE_LABELS[label];
+          const fill = drawing.fills[regionId];
+          const value = fill ? fill.intensity : null;
+          const comma = labelIndex < group.labels.length - 1 ? "," : "";
+          lines.push(`        "${label}": ${value}${comma}`);
+        });
+        const groupComma = groupIndex < groupKeys.length - 1 ? "," : "";
+        lines.push(`    }${groupComma}`);
+      });
+      lines.push("}");
+      return lines.join("\n");
     }
 
     /**
@@ -2444,6 +2638,7 @@
           }
         }
         files.push({ name: filename, content: buildSvg(combination, index) });
+        files.push({ name: filename.replace(/\.svg$/, ".jsonc"), content: buildRegionIntensityJsonc(combination, index) });
         manifestRows.push([
           String(index + 1),
           itemType,
@@ -2474,12 +2669,21 @@
           totalHands: state.combinations.length
         }, null, 2)
       });
+      files.push({
+        name: "region_labels.json",
+        content: JSON.stringify(REGION_LABELS, null, 2)
+      });
+      files.push({
+        name: "regions.jsonc",
+        content: REGIONS_JSONC_CONTENT
+      });
 
+      const svgCount = state.combinations.length;
       const zip = createStoredZip(files);
       const participant = sanitizeFilename(state.config.participantId);
       const filename = `${participant ? `${participant}_` : ""}hand-percept-study.zip`;
       downloadBlob(zip, filename);
-      showToast(`${files.length - 2} vector hands and 2 manifest files added to the ZIP.`);
+      showToast(`${svgCount} vector hands, ${svgCount} intensity files, and 4 reference files added to the ZIP.`);
     }
 
     /**
